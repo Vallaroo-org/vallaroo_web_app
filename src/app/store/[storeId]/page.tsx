@@ -3,9 +3,13 @@ import { supabase } from '@/lib/supabase';
 import ProductList from '@/components/ProductList';
 import Map from '@/components/Map';
 
-export default async function StorePage({ params }: { params: { storeId: string } }) {
-  console.log('Received params:', params);
+// Using `props: any` because the params object is unexpectedly a Promise
+export default async function StorePage(props: any) {
+  // Await the params promise to get the actual parameters
+  const params = await props.params;
   const { storeId } = params;
+
+  console.log('Resolved storeId:', storeId);
 
   // Check if storeId is a valid UUID to prevent the query from running with an invalid value
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -17,6 +21,15 @@ export default async function StorePage({ params }: { params: { storeId: string 
           <p className="text-xl text-gray-600 mt-4">
             The provided store ID is not in a valid format.
           </p>
+          <div className="mt-8 p-4 border rounded-md bg-red-50 text-left">
+            <h3 className="font-bold text-red-800">Debugging Information:</h3>
+            <pre className="mt-2 text-sm text-red-700 whitespace-pre-wrap">
+              {JSON.stringify({
+                storeId,
+                params,
+              }, null, 2)}
+            </pre>
+          </div>
         </div>
       </div>
     );
