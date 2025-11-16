@@ -14,7 +14,7 @@ const StorePage: NextPage<StorePageProps> = async ({ params }) => {
   const { storeId } = params;
 
   const { data: store, error: storeError } = await supabase
-    .from('stores')
+    .from('shops')
     .select('*')
     .eq('id', storeId)
     .single();
