@@ -69,14 +69,29 @@ export default async function StorePage(props: any) {
     );
   }
 
+  const storeGallery = store.gallery_images || [];
+  const displayImages = storeGallery.slice(0, 3);
+  const hasMoreImages = storeGallery.length > 3;
+
   return (
     <div className="bg-gray-50 min-h-screen">
+      {/* Cover Image */}
+      {store.cover_image_url && (
+        <div className="w-full h-48 sm:h-64 md:h-80 bg-gray-200">
+          <img
+            src={store.cover_image_url}
+            alt={`${store.name} cover`}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+
       <div className="container mx-auto p-4 sm:p-6 lg:p-8">
         {/* Header Section */}
-        <header className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <header className="bg-white rounded-lg shadow-md p-6 mb-8 -mt-24 relative z-10">
           <div className="flex flex-col sm:flex-row items-center justify-between">
             <div className="flex items-center mb-4 sm:mb-0">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-200 rounded-full mr-6 flex-shrink-0">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-200 rounded-full mr-6 flex-shrink-0 border-4 border-white">
                 {store.logo_url && (
                   <img
                     src={store.logo_url}
@@ -99,22 +114,60 @@ export default async function StorePage(props: any) {
         {/* Store Details and Products Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Store Details */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-8">
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-2xl font-bold mb-4 text-gray-800">Store Details</h2>
               <div className="space-y-4">
+                {store.whatsapp_number && (
+                  <div>
+                    <h3 className="font-semibold text-gray-700">WhatsApp</h3>
+                    <p className="text-gray-600">{store.whatsapp_number}</p>
+                  </div>
+                )}
                 <div>
                   <h3 className="font-semibold text-gray-700">Address</h3>
-                  <p className="text-gray-600">{store.address}</p>
+                  <address className="text-gray-600 not-italic">
+                    {store.address_line_1 && <div>{store.address_line_1}</div>}
+                    {store.address_line_2 && <div>{store.address_line_2}</div>}
+                    <div>
+                      {store.city}, {store.state} {store.pincode}
+                    </div>
+                    <div>{store.country}</div>
+                  </address>
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-700">Location</h3>
                   <div className="w-full h-64 bg-gray-200 rounded-md mt-2">
-                    {store.lat && store.lng && <Map lat={store.lat} lng={store.lng} />}
+                    {store.lat && store.lng ? (
+                      <Map lat={store.lat} lng={store.lng} />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-500">
+                        Map not available
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* Shop Gallery */}
+            {storeGallery.length > 0 && (
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h2 className="text-2xl font-bold mb-4 text-gray-800">Gallery</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  {displayImages.map((image: string, index: number) => (
+                    <div key={index} className="w-full h-32 bg-gray-200 rounded-md">
+                      <img src={image} alt={`Gallery image ${index + 1}`} className="w-full h-full object-cover rounded-md" />
+                    </div>
+                  ))}
+                  {hasMoreImages && (
+                    <div className="w-full h-32 bg-gray-800 rounded-md flex items-center justify-center text-white font-bold cursor-pointer">
+                      See More
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Column: Products */}
@@ -129,7 +182,7 @@ export default async function StorePage(props: any) {
                   </pre>
                 </div>
               )}
-              {products && <ProductList products={products} />}
+              {products && <ProductList products={products} shop={store} />}
             </div>
           </div>
         </div>
