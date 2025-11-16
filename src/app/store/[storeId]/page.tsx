@@ -13,34 +13,6 @@ export default async function StorePage(props: any) {
   const params = await props.params;
   const { storeId } = params;
 
-  console.log('Resolved storeId:', storeId);
-  console.log('Store data:', JSON.stringify(store, null, 2));
-  console.log('Products data:', JSON.stringify(products, null, 2));
-
-  // Check if storeId is a valid UUID to prevent the query from running with an invalid value
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(storeId)) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <div className="text-center p-8">
-          <h1 className="text-4xl font-bold text-gray-800">Invalid Store ID</h1>
-          <p className="text-xl text-gray-600 mt-4">
-            The provided store ID is not in a valid format.
-          </p>
-          <div className="mt-8 p-4 border rounded-md bg-red-50 text-left">
-            <h3 className="font-bold text-red-800">Debugging Information:</h3>
-            <pre className="mt-2 text-sm text-red-700 whitespace-pre-wrap">
-              {JSON.stringify({
-                storeId,
-                params,
-              }, null, 2)}
-            </pre>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const { data: store, error: storeError } = await supabase
     .from('shops')
     .select('*')
@@ -51,6 +23,9 @@ export default async function StorePage(props: any) {
     .from('products')
     .select('*')
     .eq('shop_id', storeId);
+
+  console.log('Store data:', JSON.stringify(store, null, 2));
+  console.log('Products data:', JSON.stringify(products, null, 2));
 
   if (storeError || !store) {
     return (
