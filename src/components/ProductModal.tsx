@@ -35,8 +35,9 @@ const ProductModal = ({ product, onClose, shop }: ProductModalProps) => {
   };
 
   const imageUrl = getProductImage(product);
-  const whatsappMessage = encodeURIComponent(`I'm interested in your product: ${product.name}`);
-  const whatsappUrl = `https://wa.me/${shop.whatsapp_number}?text=${whatsappMessage}`;
+  const productLink = `${process.env.NEXT_PUBLIC_BASE_URL}/product/${product.id}`;
+  const whatsappMessage = encodeURIComponent(`I'm interested in your product: ${product.name}. More details: ${productLink}`);
+  const whatsappUrl = `https://wa.me/+91${shop.whatsapp_number}?text=${whatsappMessage}`;
 
   return (
     <div

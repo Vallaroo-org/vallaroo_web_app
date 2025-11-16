@@ -1,10 +1,14 @@
 import ShareButton from '@/components/ShareButton';
-import { supabase } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase';
 import ProductList from '@/components/ProductList';
-import Map from '@/components/Map';
+import StoreDetails from '@/components/StoreDetails';
 
 // Using `props: any` because the params object is unexpectedly a Promise
 export default async function StorePage(props: any) {
+  const supabase = getSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
   // Await the params promise to get the actual parameters
   const params = await props.params;
   const { storeId } = params;
@@ -69,10 +73,6 @@ export default async function StorePage(props: any) {
     );
   }
 
-  const storeGallery = store.gallery_images || [];
-  const displayImages = storeGallery.slice(0, 3);
-  const hasMoreImages = storeGallery.length > 3;
-
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Cover Image */}
@@ -105,70 +105,31 @@ export default async function StorePage(props: any) {
                 <p className="text-lg text-gray-600">{store.category}</p>
               </div>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center space-x-2">
               <ShareButton />
+              {store.whatsapp_number && (
+                <a
+                  href={`https://wa.me/+91${store.whatsapp_number}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center p-2 bg-green-500 text-white font-bold rounded-full hover:bg-green-600 transition-colors"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.487 5.235 3.487 8.413 0 6.557-5.338 11.892-11.894 11.892-1.99 0-3.903-.52-5.586-1.456l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.886-.001 2.267.655 4.398 1.803 6.12l-1.214 4.433 4.515-1.182z" />
+                  </svg>
+                </a>
+              )}
             </div>
           </div>
         </header>
 
         {/* Store Details and Products Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column: Store Details */}
-          <div className="lg:col-span-1 space-y-8">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-2xl font-bold mb-4 text-gray-800">Store Details</h2>
-              <div className="space-y-4">
-                {store.whatsapp_number && (
-                  <div>
-                    <h3 className="font-semibold text-gray-700">WhatsApp</h3>
-                    <p className="text-gray-600">{store.whatsapp_number}</p>
-                  </div>
-                )}
-                <div>
-                  <h3 className="font-semibold text-gray-700">Address</h3>
-                  <address className="text-gray-600 not-italic">
-                    {store.address_line_1 && <div>{store.address_line_1}</div>}
-                    {store.address_line_2 && <div>{store.address_line_2}</div>}
-                    <div>
-                      {store.city}, {store.state} {store.pincode}
-                    </div>
-                    <div>{store.country}</div>
-                  </address>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-700">Location</h3>
-                  <div className="w-full h-64 bg-gray-200 rounded-md mt-2">
-                    {store.lat && store.lng ? (
-                      <Map lat={store.lat} lng={store.lng} />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-500">
-                        Map not available
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Shop Gallery */}
-            {storeGallery.length > 0 && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold mb-4 text-gray-800">Gallery</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  {displayImages.map((image: string, index: number) => (
-                    <div key={index} className="w-full h-32 bg-gray-200 rounded-md">
-                      <img src={image} alt={`Gallery image ${index + 1}`} className="w-full h-full object-cover rounded-md" />
-                    </div>
-                  ))}
-                  {hasMoreImages && (
-                    <div className="w-full h-32 bg-gray-800 rounded-md flex items-center justify-center text-white font-bold cursor-pointer">
-                      See More
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          <StoreDetails store={store} />
 
           {/* Right Column: Products */}
           <div className="lg:col-span-2">
