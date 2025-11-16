@@ -44,7 +44,7 @@ export default async function StorePage(props: any) {
   const { data: products, error: productsError } = await supabase
     .from('products')
     .select('*')
-    .eq('store_id', storeId);
+    .eq('shop_id', storeId);
 
   if (storeError || !store) {
     return (
