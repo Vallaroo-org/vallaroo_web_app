@@ -61,15 +61,6 @@ export default function StoreDetails({ store }: { store: any }) {
           </div>
           <div>
             <h3 className="font-semibold text-gray-700">Location</h3>
-            <div className="w-full h-64 bg-gray-200 rounded-md mt-2">
-              {store.lat && store.lng ? (
-                <Map lat={store.lat} lng={store.lng} />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-500">
-                  Map not available
-                </div>
-              )}
-            </div>
             <button
               onClick={openMap}
               className="mt-2 w-full inline-flex items-center justify-center px-4 py-2 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600 transition-colors"
@@ -77,26 +68,27 @@ export default function StoreDetails({ store }: { store: any }) {
               Open in Maps
             </button>
           </div>
+
+          {/* Shop Gallery */}
+          {storeGallery.length > 0 && (
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-2xl font-bold mb-4 text-gray-800">Gallery</h2>
+              <div className="grid grid-cols-2 gap-4">
+                {displayImages.map((image: string, index: number) => (
+                  <div key={index} className="w-full h-32 bg-gray-200 rounded-md">
+                    <img src={image} alt={`Gallery image ${index + 1}`} className="w-full h-full object-cover rounded-md" />
+                  </div>
+                ))}
+                {hasMoreImages && (
+                  <div className="w-full h-32 bg-gray-800 rounded-md flex items-center justify-center text-white font-bold cursor-pointer">
+                    See More
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
-
-      {storeGallery.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold mb-4 text-gray-800">Gallery</h2>
-          <div className="grid grid-cols-2 gap-4">
-            {displayImages.map((image: string, index: number) => (
-              <div key={index} className="w-full h-32 bg-gray-200 rounded-md">
-                <img src={image} alt={`Gallery image ${index + 1}`} className="w-full h-full object-cover rounded-md" />
-              </div>
-            ))}
-            {hasMoreImages && (
-              <div className="w-full h-32 bg-gray-800 rounded-md flex items-center justify-center text-white font-bold cursor-pointer">
-                See More
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

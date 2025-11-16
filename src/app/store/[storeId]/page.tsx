@@ -109,7 +109,7 @@ export default async function StorePage(props: any) {
               <ShareButton />
               {store.whatsapp_number && (
                 <a
-                  href={`https://wa.me/+91${store.whatsapp_number}`}
+                  href={`https://wa.me/91${store.whatsapp_number}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center p-2 bg-green-500 text-white font-bold rounded-full hover:bg-green-600 transition-colors"
