@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface Product {
   id: string;
@@ -24,18 +25,38 @@ const ITEMS_PER_PAGE = 6;
 
 const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
   const [selectedImage, setSelectedImage] = useState(product.image_urls?.[0] || null);
+  const [copied, setCopied] = useState(false);
+  const router = useRouter();
 
-  const handleInquire = () => {
-    console.log('NEXT_PUBLIC_BASE_URL:', process.env.NEXT_PUBLIC_BASE_URL);
-    const productLink = `${process.env.NEXT_PUBLIC_BASE_URL}/product/${product.id}`;
+  const handleInquire = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const productLink = `${baseUrl}/product/${product.id}`;
     const whatsappMessage = encodeURIComponent(`I'm interested in your product: ${product.name}. More details: ${productLink}`);
     const cleanedWhatsappNumber = shop.whatsapp_number.replace(/\D/g, '');
     const whatsappUrl = `https://wa.me/${cleanedWhatsappNumber.startsWith('91') ? cleanedWhatsappNumber : '91' + cleanedWhatsappNumber}?text=${whatsappMessage}`;
     window.open(whatsappUrl, '_blank');
   };
 
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const productLink = `${baseUrl}/product/${product.id}`;
+    navigator.clipboard.writeText(productLink).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const handleCardClick = () => {
+    router.push(`/product/${product.id}`);
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300">
+    <div
+      className="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300 cursor-pointer"
+      onClick={handleCardClick}
+    >
       <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
         {selectedImage ? (
           <img
@@ -53,7 +74,10 @@ const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
             <div
               key={index}
               className={`w-12 h-12 border-2 rounded-md cursor-pointer ${selectedImage === url ? 'border-blue-500' : 'border-transparent'}`}
-              onClick={() => setSelectedImage(url)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedImage(url);
+              }}
             >
               <img
                 src={url}
@@ -69,12 +93,20 @@ const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
           <h3 className="text-lg font-semibold text-gray-800 truncate">{product.name}</h3>
           <p className="text-gray-600 mt-1">₹{product.price.toFixed(2)}</p>
         </div>
-        <button
-          onClick={handleInquire}
-          className="mt-4 w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
-        >
-          Inquire on WhatsApp
-        </button>
+        <div className="flex items-center space-x-2 mt-4">
+          <button
+            onClick={handleInquire}
+            className="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+          >
+            Inquire
+          </button>
+          <button
+            onClick={handleShare}
+            className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+          >
+            {copied ? 'Copied!' : 'Share'}
+          </button>
+        </div>
       </div>
     </div>
   );

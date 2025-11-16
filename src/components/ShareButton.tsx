@@ -22,8 +22,9 @@ const ShareButton = ({ store }: ShareButtonProps) => {
 
   const handleWhatsAppInquiry = () => {
     if (store.whatsapp_number) {
+      const whatsappMessage = encodeURIComponent(`I'm interested in your shop: ${store.name}.`);
       const cleanedWhatsappNumber = store.whatsapp_number.replace(/\D/g, '');
-      const whatsappUrl = `https://wa.me/${cleanedWhatsappNumber.startsWith('91') ? cleanedWhatsappNumber : '91' + cleanedWhatsappNumber}`;
+      const whatsappUrl = `https://wa.me/${cleanedWhatsappNumber.startsWith('91') ? cleanedWhatsappNumber : '91' + cleanedWhatsappNumber}?text=${whatsappMessage}`;
       window.open(whatsappUrl, '_blank');
     }
   };
