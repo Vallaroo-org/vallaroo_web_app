@@ -4,6 +4,7 @@ import ProductList from '@/components/ProductList';
 import Map from '@/components/Map';
 
 export default async function StorePage({ params }: { params: { storeId: string } }) {
+  console.log('Received params:', params);
   const { storeId } = params;
 
   // Check if storeId is a valid UUID to prevent the query from running with an invalid value
