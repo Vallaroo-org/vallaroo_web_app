@@ -1,17 +1,25 @@
 import ShareButton from '@/components/ShareButton';
 import { supabase } from '@/lib/supabase';
-import type { NextPage } from 'next';
 import ProductList from '@/components/ProductList';
 import Map from '@/components/Map';
 
-interface StorePageProps {
-  params: {
-    storeId: string;
-  };
-}
-
-const StorePage: NextPage<StorePageProps> = async ({ params }) => {
+export default async function StorePage({ params }: { params: { storeId: string } }) {
   const { storeId } = params;
+
+  // Check if storeId is a valid UUID to prevent the query from running with an invalid value
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(storeId)) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="text-center p-8">
+          <h1 className="text-4xl font-bold text-gray-800">Invalid Store ID</h1>
+          <p className="text-xl text-gray-600 mt-4">
+            The provided store ID is not in a valid format.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const { data: store, error: storeError } = await supabase
     .from('shops')
@@ -114,6 +122,4 @@ const StorePage: NextPage<StorePageProps> = async ({ params }) => {
       </div>
     </div>
   );
-};
-
-export default StorePage;
+}
