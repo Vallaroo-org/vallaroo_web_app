@@ -31,7 +31,7 @@ const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
 
   const handleInquire = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000');
+    const baseUrl = 'https://app.vallaroo.com';
     const productLink = `${baseUrl}/product/${product.id}`;
     const whatsappMessage = encodeURIComponent(`I'm interested in your product: ${product.name}. More details: ${productLink}`);
     const cleanedWhatsappNumber = shop.whatsapp_number.replace(/\D/g, '');
@@ -41,7 +41,7 @@ const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000');
+    const baseUrl = 'https://app.vallaroo.com';
     const productLink = `${baseUrl}/product/${product.id}`;
     navigator.clipboard.writeText(productLink).then(() => {
       setCopied(true);
