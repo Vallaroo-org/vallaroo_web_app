@@ -85,9 +85,18 @@ export default function AddressesPage() {
 
                     {showForm ? (
                         <div className="bg-card text-card-foreground rounded-xl shadow-sm p-6 border border-border">
-                            <h2 className="text-lg font-bold mb-4">
-                                {editingAddress ? 'Edit Address' : t('addNewAddress')}
-                            </h2>
+                            <div className="flex items-center gap-3 mb-4">
+                                <button
+                                    onClick={() => setShowForm(false)}
+                                    className="p-1 rounded-full hover:bg-accent transition-colors"
+                                    aria-label="Back to addresses"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg>
+                                </button>
+                                <h2 className="text-lg font-bold">
+                                    {editingAddress ? 'Edit Address' : t('addNewAddress')}
+                                </h2>
+                            </div>
                             <AddressForm
                                 key={editingAddress ? editingAddress.id : 'new-address'}
                                 userId={userId}

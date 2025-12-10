@@ -172,7 +172,9 @@ export default function ProfilePage() {
                                 onChange={handleAvatarChange}
                             />
 
-                            <h1 className="text-2xl font-bold">{user.user_metadata?.full_name || 'User'}</h1>
+                            {user.user_metadata?.full_name && (
+                                <h1 className="text-2xl font-bold">{user.user_metadata.full_name}</h1>
+                            )}
                             <p className="opacity-90">{user.email}</p>
                         </div>
 
