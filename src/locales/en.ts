@@ -90,4 +90,6 @@ export const en = {
   noProductsMatched: "No products found matching your criteria.",
   openMaps: "Open in Maps",
   followingUpdates: "Updates",
+  follow: "Follow",
+  following: "Following",
 };

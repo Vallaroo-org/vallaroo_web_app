@@ -90,4 +90,6 @@ export const ml = {
     noProductsMatched: "നിങ്ങളുടെ തിരയലുമായി പൊരുത്തപ്പെടുന്ന ഉൽപ്പന്നങ്ങളൊന്നും കണ്ടെത്തിയില്ല.",
     openMaps: "മാപ്പിൽ തുറക്കുക",
     followingUpdates: "അപ്‌ഡേറ്റുകൾ",
+    follow: "പിന്തുടരുക",
+    following: "പിന്തുടരുന്നു",
 };
