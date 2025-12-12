@@ -85,9 +85,12 @@ export default function StoryViewer({ stories, onClose }: StoryViewerProps) {
                 try {
                     await supabase
                         .from('story_views')
-                        .insert({
+                        .upsert({
                             story_id: currentStory.id,
-                            viewer_id: user.id
+                            viewer_id: user.id,
+                            viewed_at: new Date().toISOString()
+                        }, {
+                            onConflict: 'story_id, viewer_id'
                         })
                         .select()
                         .maybeSingle();
