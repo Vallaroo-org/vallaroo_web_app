@@ -78,12 +78,17 @@ export default function StoryViewer({ stories, onClose }: StoryViewerProps) {
             const currentStory = stories[currentIndex];
             if (!currentStory) return;
 
+            console.log('StoryViewer: Recording view for story', currentStory.id);
+
             const { supabase } = await import('@/lib/supabaseClient');
-            const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+            if (authError) console.error('StoryViewer: Auth Error', authError);
 
             if (user) {
+                console.log('StoryViewer: User found', user.id);
                 try {
-                    await supabase
+                    const { data, error } = await supabase
                         .from('story_views')
                         .upsert({
                             story_id: currentStory.id,
@@ -94,9 +99,17 @@ export default function StoryViewer({ stories, onClose }: StoryViewerProps) {
                         })
                         .select()
                         .maybeSingle();
+
+                    if (error) {
+                        console.error('StoryViewer: Upsert failed', error);
+                    } else {
+                        console.log('StoryViewer: View recorded successfully', data);
+                    }
                 } catch (error) {
-                    console.error('Error recording view:', error);
+                    console.error('StoryViewer: Exception recording view:', error);
                 }
+            } else {
+                console.warn('StoryViewer: No user found, skipping view record.');
             }
         };
         recordView();
