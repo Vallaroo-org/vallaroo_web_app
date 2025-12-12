@@ -71,7 +71,7 @@ export default function SignUpPage() {
                             Please check your inbox and click the link to activate your account.
                         </p>
                         <Link
-                            href="/login"
+                            href="/signin"
                             className="inline-flex w-full justify-center rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors"
                         >
                             Back to Login
@@ -209,7 +209,7 @@ export default function SignUpPage() {
                         <div className="mt-6 text-center">
                             <p className="text-sm text-gray-600 dark:text-gray-400">
                                 Already have an account?{' '}
-                                <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
+                                <Link href="/signin" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
                                     Sign in
                                 </Link>
                             </p>
