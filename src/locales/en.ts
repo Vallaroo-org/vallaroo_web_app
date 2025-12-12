@@ -89,4 +89,5 @@ export const en = {
   pageOf: "{page} of {total}",
   noProductsMatched: "No products found matching your criteria.",
   openMaps: "Open in Maps",
+  followingUpdates: "Updates",
 };
