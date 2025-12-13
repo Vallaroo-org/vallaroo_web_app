@@ -168,7 +168,13 @@ export default function StoryViewer({ stories, onClose }: StoryViewerProps) {
             <div className="relative w-full h-full md:max-w-md md:aspect-[9/16] bg-black md:rounded-xl overflow-hidden shadow-2xl">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                    src={currentStory.media_url}
+                    src={(() => {
+                        const url = currentStory.media_url;
+                        if (url.includes('/storage/v1/object/public/')) {
+                            return `${url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/')}?width=1080&resize=contain`;
+                        }
+                        return url;
+                    })()}
                     alt="Story"
                     className="w-full h-full object-contain"
                 />
