@@ -1,6 +1,10 @@
 'use client';
 
+import { useLanguage } from '@/context/LanguageContext';
+
 export default function StoreDetails({ store }: { store: any }) {
+  const { t } = useLanguage();
+
   const openMap = () => {
     let query;
     if (store.latitude && store.longitude) {
@@ -27,62 +31,45 @@ export default function StoreDetails({ store }: { store: any }) {
     }
   };
 
-  const storeGallery = store.gallery_images || [];
-  const displayImages = storeGallery.slice(0, 3);
-  const hasMoreImages = storeGallery.length > 3;
-
   return (
-    <div className="lg:col-span-1 space-y-8">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">Store Details</h2>
-        <div className="space-y-4">
+    <div className="space-y-6">
+      <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
+        <h2 className="text-2xl font-bold mb-4 text-foreground">{t('description') || 'Store Details'}</h2>
+        <div className="space-y-5">
           {store.whatsapp_number && (
             <div>
-              <h3 className="font-semibold text-gray-700">WhatsApp</h3>
-              <p className="text-gray-600">{store.whatsapp_number}</p>
+              <h3 className="font-semibold text-foreground">WhatsApp</h3>
+              <p className="text-muted-foreground">{store.whatsapp_number}</p>
             </div>
           )}
           <div>
-            <h3 className="font-semibold text-gray-700">Address</h3>
-            <address className="text-gray-600 not-italic">
+            <h3 className="font-semibold text-foreground">{t('addressLabel') || 'Address'}</h3>
+            <address className="text-muted-foreground not-italic leading-relaxed">
               {store.address_line1 && <div>{store.address_line1}</div>}
               {store.address_line2 && <div>{store.address_line2}</div>}
               {(store.city || store.state || store.postal_code) && (
                 <div>
                   {store.city && <span>{store.city}, </span>}
                   {store.state && <span>{store.state} </span>}
-                  {store.postal_code && - <span>{store.postal_code}</span>}
+                  {store.postal_code && <span>{store.postal_code}</span>}
                 </div>
               )}
               {store.country && <div>{store.country}</div>}
             </address>
           </div>
-          <div>
-            <h3 className="font-semibold text-gray-700">Location</h3>
-            <button
-              onClick={openMap}
-              className="mt-2 w-full inline-flex items-center justify-center px-4 py-2 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600 transition-colors"
-            >
-              Open in Maps
-            </button>
-          </div>
-
-          {/* Shop Gallery */}
-          {storeGallery.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-2xl font-bold mb-4 text-gray-800">Gallery</h2>
-              <div className="grid grid-cols-2 gap-4">
-                {displayImages.map((image: string, index: number) => (
-                  <div key={index} className="w-full h-32 bg-gray-200 rounded-md">
-                    <img src={image} alt={`Gallery image ${index + 1}`} className="w-full h-full object-cover rounded-md" />
-                  </div>
-                ))}
-                {hasMoreImages && (
-                  <div className="w-full h-32 bg-gray-800 rounded-md flex items-center justify-center text-white font-bold cursor-pointer">
-                    See More
-                  </div>
-                )}
-              </div>
+          {(store.latitude && store.longitude) && (
+            <div>
+              <h3 className="font-semibold text-foreground mb-2">{t('openMaps') ? 'Location' : 'Location'}</h3>
+              <button
+                onClick={openMap}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors shadow-sm"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {t('openMaps') || 'Open in Maps'}
+              </button>
             </div>
           )}
         </div>
@@ -90,3 +77,4 @@ export default function StoreDetails({ store }: { store: any }) {
     </div>
   );
 }
+

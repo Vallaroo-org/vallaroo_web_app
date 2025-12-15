@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 
 // Define types for Cart Item and Cart Context
 export interface CartItem {
@@ -33,6 +33,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
+    const lastUpdateRef = useRef<string>('');
 
     // Load cart from local storage on mount
     useEffect(() => {
@@ -54,14 +55,23 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [cartItems, isLoaded]);
 
-    const addToCart = (newItem: CartItem) => {
+    const addToCart = useCallback((newItem: CartItem) => {
+        const updateId = `${newItem.productId}-${Date.now()}`;
+
         setCartItems((prevItems) => {
+            // Prevent double execution
+            if (lastUpdateRef.current === updateId) {
+                return prevItems;
+            }
+
+            lastUpdateRef.current = updateId;
+
             const existingItemIndex = prevItems.findIndex(
                 (item) => item.productId === newItem.productId && item.variantId === newItem.variantId
             );
 
             if (existingItemIndex > -1) {
-                // Item exists, update quantity
+                // Item exists, accumulate quantity
                 const newItems = [...prevItems];
                 newItems[existingItemIndex].quantity += newItem.quantity;
                 return newItems;
@@ -70,7 +80,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 return [...prevItems, newItem];
             }
         });
-    };
+    }, []);
 
     const removeFromCart = (productId: string, variantId?: string) => {
         setCartItems((prevItems) =>

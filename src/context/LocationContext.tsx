@@ -10,6 +10,7 @@ interface LocationContextType {
     error: string | null;
     isLoading: boolean;
     requestLocation: () => Promise<void>;
+    setManualLocation: (place: string) => void;
     permissionStatus: string | null;
 }
 
@@ -83,6 +84,14 @@ export const LocationProvider: React.FC<{ children: ReactNode }> = ({ children }
         );
     };
 
+    const setManualLocation = (place: string) => {
+        setPlaceName(place);
+        // Clear coordinates when manually setting location
+        setLatitude(null);
+        setLongitude(null);
+        setError(null);
+    };
+
     return (
         <LocationContext.Provider
             value={{
@@ -92,6 +101,7 @@ export const LocationProvider: React.FC<{ children: ReactNode }> = ({ children }
                 error,
                 isLoading,
                 requestLocation,
+                setManualLocation,
                 permissionStatus
             }}
         >

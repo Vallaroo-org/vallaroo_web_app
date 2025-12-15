@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import { uploadToR2 } from '@/lib/r2-upload';
 
 export default function ProfilePage() {
     const { t } = useLanguage();
@@ -89,15 +90,8 @@ export default function ProfilePage() {
 
         setLoading(true);
         try {
-            const { error: uploadError } = await supabase.storage
-                .from('profile-images')
-                .upload(filePath, file);
-
-            if (uploadError) throw uploadError;
-
-            const { data: { publicUrl } } = supabase.storage
-                .from('profile-images')
-                .getPublicUrl(filePath);
+            // Upload to R2
+            const { publicUrl } = await uploadToR2(file, `avatars/${user.id}`);
 
             const { error: updateError } = await supabase.auth.updateUser({
                 data: { avatar_url: publicUrl }

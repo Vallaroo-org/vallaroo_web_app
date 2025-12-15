@@ -1,19 +1,14 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Filter, Share2, MessageCircle, ShoppingCart, Check } from 'lucide-react';
+import { Search, Filter, Share2, MessageCircle, ShoppingCart, Check, Loader2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
+import { getProducts, type Product as ActionProduct, type SortOption } from '../app/actions/get-products';
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  description: string;
-  image_urls: string[];
-  category: string | null;
-}
+// Interface matching the Action's return type + UI needs
+interface Product extends ActionProduct { }
 
 interface Shop {
   id: string;
@@ -23,33 +18,44 @@ interface Shop {
 }
 
 interface ProductListProps {
-  products: Product[];
+  initialProducts: Product[];
   shop: Shop;
 }
-
-const ITEMS_PER_PAGE = 6;
 
 const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
   const [selectedImage, setSelectedImage] = useState(product.image_urls?.[0] || null);
   const [copied, setCopied] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
+  const addingRef = useRef(false);
   const router = useRouter();
   const { addToCart } = useCart();
   const { locale, t } = useLanguage();
 
   const getLocalizedContent = (item: any, field: string) => {
     if (!item) return '';
-    if (locale === 'ml') {
-      return item[`${field}_ml`] || item[field];
+    // If current locale is Malayalam ('ml') and we have a value, use it.
+    // Fallback to English/default field if ml content is missing.
+    if (locale === 'ml' && item[`${field}_ml`]) {
+      return item[`${field}_ml`];
     }
     return item[field];
   };
 
   const shopName = getLocalizedContent(shop, 'name');
   const productName = getLocalizedContent(product, 'name');
+  const productDesc = getLocalizedContent(product, 'description');
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
+
+    // Guard using useRef
+    if (addingRef.current) {
+      return;
+    }
+
+    addingRef.current = true;
+
     addToCart({
       productId: product.id,
       quantity: 1,
@@ -61,8 +67,18 @@ const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
       price: product.price,
       imageUrl: product.image_urls?.[0],
     });
+
     setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 2000);
+
+    // Reset guard immediately
+    setTimeout(() => {
+      addingRef.current = false;
+    }, 100);
+
+    // Reset visual feedback after 2s
+    setTimeout(() => {
+      setIsAdded(false);
+    }, 2000);
   };
 
   const handleInquire = (e: React.MouseEvent) => {
@@ -91,12 +107,15 @@ const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
     router.push(`/product/${product.id}`);
   };
 
+  const hasWhatsapp = !!shop.whatsapp_number;
+
   return (
     <div
       className="bg-card text-card-foreground rounded-2xl border border-border/50 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col h-full overflow-hidden"
       onClick={handleCardClick}
     >
-      <div className="relative w-full aspect-square bg-muted/50 flex items-center justify-center overflow-hidden">
+      {/* Aspect ratio fixed to something consistent, e.g. 4/5 or Square */}
+      <div className="relative w-full aspect-[4/5] bg-muted/50 flex items-center justify-center overflow-hidden">
         {selectedImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -112,7 +131,7 @@ const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
         )}
 
         {/* Quick Actions Overlay */}
-        <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-x-4 group-hover:translate-x-0">
+        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-x-4 group-hover:translate-x-0">
           <button
             onClick={handleShare}
             className="p-2 rounded-full bg-background/80 backdrop-blur-sm text-foreground shadow-sm hover:bg-background transition-colors"
@@ -120,60 +139,38 @@ const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
           >
             <Share2 className="w-4 h-4" />
           </button>
-          <button
-            onClick={handleAddToCart}
-            className="p-2 rounded-full bg-background/80 backdrop-blur-sm text-foreground shadow-sm hover:bg-background transition-colors"
-            title="Add to Cart"
-          >
-            {isAdded ? <Check className="w-4 h-4 text-green-600" /> : <ShoppingCart className="w-4 h-4" />}
-          </button>
         </div>
       </div>
 
-      <div className="p-5 flex flex-col flex-grow">
-        {/* Thumbnails */}
-        {product.image_urls && product.image_urls.length > 1 && (
-          <div className="flex gap-2 mb-4 overflow-x-auto scrollbar-hide pb-1">
-            {product.image_urls.slice(0, 4).map((url, index) => (
-              <button
-                key={index}
-                className={`relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${selectedImage === url ? 'border-primary ring-1 ring-primary/20' : 'border-transparent hover:border-border'}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedImage(url);
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={url}
-                  alt={`${productName} thumbnail ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            ))}
-          </div>
-        )}
-
+      <div className="p-4 flex flex-col flex-grow">
         <div className="flex-grow space-y-2">
+          {/* Capitalized, Bold Name */}
           <div className="flex justify-between items-start gap-2">
-            <h3 className="text-lg font-semibold leading-tight line-clamp-2 group-hover:text-primary transition-colors">{productName}</h3>
-            <span className="text-lg font-bold text-primary whitespace-nowrap">₹{product.price.toFixed(0)}</span>
+            <h3 className="text-lg font-bold leading-tight line-clamp-2 capitalize group-hover:text-primary transition-colors">{productName}</h3>
           </div>
-          {product.category && (
-            <span className="inline-block px-2 py-0.5 rounded-full bg-muted text-xs font-medium text-muted-foreground capitalize">
-              {product.category}
-            </span>
-          )}
-          <p className="text-sm text-muted-foreground line-clamp-2">{getLocalizedContent(product, 'description')}</p>
+          <span className="text-lg font-bold text-primary whitespace-nowrap block">₹{product.price.toFixed(0)}</span>
+          <p className="text-sm text-muted-foreground line-clamp-2">{productDesc}</p>
         </div>
 
-        <div className="mt-5 pt-4 border-t border-border/50">
+        <div className="mt-4 pt-4 border-t border-border/50 flex flex-col sm:flex-row gap-2 w-full">
+          {/* Stack on mobile, side-by-side on larger screens */}
+          <button
+            onClick={handleAddToCart}
+            className="flex-1 bg-secondary text-secondary-foreground px-4 py-2.5 rounded-xl hover:bg-secondary/90 transition-colors flex items-center justify-center gap-2 font-medium text-sm"
+          >
+            <ShoppingCart className="w-4 h-4 flex-shrink-0" />
+            <span>{t('addToCart') || 'Add to Cart'}</span>
+          </button>
           <button
             onClick={handleInquire}
-            className="w-full bg-primary text-primary-foreground px-4 py-2.5 rounded-xl hover:bg-primary/90 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 font-medium active:scale-[0.98]"
+            disabled={!hasWhatsapp}
+            className={`flex-1 px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 font-medium text-sm ${hasWhatsapp
+              ? 'bg-green-600 text-white hover:bg-green-700'
+              : 'bg-muted text-muted-foreground opacity-50 cursor-not-allowed'
+              }`}
           >
-            <MessageCircle className="w-4 h-4" />
-            {t('inquireWhatsapp') || 'Inquire on WhatsApp'}
+            <MessageCircle className="w-4 h-4 flex-shrink-0" />
+            <span className="truncate">{hasWhatsapp ? 'WhatsApp' : 'No WhatsApp'}</span>
           </button>
         </div>
       </div>
@@ -181,39 +178,146 @@ const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
   );
 };
 
-const ProductList = ({ products, shop }: ProductListProps) => {
+// Hook for Debounce
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
+
+const ProductList = ({ initialProducts = [], shop }: ProductListProps) => {
+  const [products, setProducts] = useState<Product[]>(initialProducts || []);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
+  // const [selectedCategory, setSelectedCategory] = useState('all'); // Removed strict category filtering for now as data structure is unclear
+
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+
+  const debouncedSearch = useDebounce(searchTerm, 500);
+  const observerTarget = useRef<HTMLDivElement>(null);
   const { t } = useLanguage();
 
-  const categories = useMemo(() => {
-    const allCategories = products.map((p) => p.category).filter(Boolean) as string[];
-    return ['all', ...Array.from(new Set(allCategories))];
-  }, [products]);
+  // Reset function
+  const resetList = () => {
+    setProducts([]);
+    setPage(1);
+    setHasMore(true);
+  };
 
-  const filteredProducts = useMemo(() => {
-    return products
-      .filter((product) =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      .filter(
-        (product) =>
-          selectedCategory === 'all' || product.category === selectedCategory
-      );
-  }, [products, searchTerm, selectedCategory]);
+  // Fetch Data Function
+  const loadProducts = useCallback(async (isNewSearch = false) => {
+    setLoading(true);
+    try {
+      const currentPage = isNewSearch ? 1 : page;
+      const result = await getProducts({
+        shopId: shop.id,
+        page: currentPage,
+        limit: 20,
+        search: debouncedSearch,
+        sortBy: sortBy,
+      });
 
-  const paginatedProducts = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredProducts, currentPage]);
+      if (isNewSearch) {
+        setProducts(result.products);
+        setPage(2); // Next page will be 2
+      } else {
+        setProducts(prev => [...prev, ...result.products]);
+        setPage(prev => prev + 1);
+      }
+      setHasMore(result.hasMore);
 
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+    } catch (error) {
+      console.error("Failed to load products", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [shop.id, page, debouncedSearch, sortBy]);
+
+
+  // Effect: Search or Sort changed -> Reset and Fetch
+  useEffect(() => {
+    // Determine if we need to fetch. 
+    // We fetch if search changes (debounced) or sort changes.
+    // We do NOT fetch initially if initialProducts are passed, UNLESS search/sort differs from default.
+    // However, to keep it simple and consistent with "Server Side Search", 
+    // we can trigger a fetch when these change.
+
+    // Check if it's the initial render matching props (empty search, newest sort)
+    // If so, we might not need to fetch immediately, but since we want to handle pagination correctly
+    // from point 0, let's just re-fetch to ensure sync or handle 'load more' correctly.
+    // Actually, handling `initialProducts` with pagination logic is tricky if we don't know the cursor.
+    // Strategy: Use initialProducts for first render. If Search/Sort changes, replace list.
+    // If scrolling, append.
+
+    // To simplify: If search/sort is default, we assume initialProducts is Page 1.
+    // If changed, we fetch Page 1.
+
+    if (debouncedSearch === '' && sortBy === 'newest' && page === 1 && products === initialProducts) {
+      // Initial state, do nothing
+      // Except update page to 2 if we have items?
+      if (initialProducts.length > 0) setPage(2);
+      return;
+    }
+
+    // If search/sort changed (or we are not in initial state), fetch page 1
+    // We only trigger this effect if debouncedSearch or sortBy specifically changes.
+    loadProducts(true);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, sortBy]);
+
+
+  // Effect: Infinite Scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          loadProducts(false);
+        }
+      },
+      { threshold: 0.1 } // Load when 10% visible
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [hasMore, loading, loadProducts]);
+
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row justify-between mb-6 gap-4">
-        <div className="relative w-full sm:w-64">
+      {/* Header with Search and Sort */}
+      <div className="flex flex-col sm:flex-row justify-between mb-6 gap-4 items-center">
+        {/* Sort (Left/Top on mobile) or Filters */}
+        <div className="relative w-full sm:w-48 order-2 sm:order-1">
+          <select
+            className="w-full px-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer transition-shadow"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+          >
+            <option value="newest">{t('newest') || 'Newest'}</option>
+            <option value="price_asc">{t('priceLowHigh') || 'Price: Low to High'}</option>
+            <option value="price_desc">{t('priceHighLow') || 'Price: High to Low'}</option>
+            <option value="name_asc">{t('nameAZ') || 'Name: A-Z'}</option>
+          </select>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+          </div>
+        </div>
+
+        {/* Search (Right as requested) */}
+        <div className="relative w-full sm:w-64 order-1 sm:order-2">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
@@ -223,58 +327,30 @@ const ProductList = ({ products, shop }: ProductListProps) => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="relative w-full sm:w-48">
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <select
-            className="w-full pl-9 pr-8 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer transition-shadow"
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-          >
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                {category === 'all' ? t('allProducts') : category.charAt(0).toUpperCase() + category.slice(1)}
-              </option>
-            ))}
-          </select>
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-            <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-          </div>
-        </div>
       </div>
 
-      {paginatedProducts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {paginatedProducts.map((product) => (
-            <ProductCard key={product.id} product={product} shop={shop} />
-          ))}
-        </div>
+      {products.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} shop={shop} />
+            ))}
+          </div>
+
+          {/* Loading Indicator for Infinite Scroll */}
+          {hasMore && (
+            <div ref={observerTarget} className="flex justify-center p-8 w-full">
+              {loading && <Loader2 className="animate-spin h-8 w-8 text-primary" />}
+            </div>
+          )}
+        </>
       ) : (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">{t('noProductsMatched') || 'No products found.'}</p>
-        </div>
-      )}
-
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center mt-8 gap-2">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {t('previous') || 'Previous'}
-          </button>
-          <span className="text-sm text-muted-foreground px-2">
-            {(t('pageOf') || '{page} / {total}').replace('{page}', currentPage.toString()).replace('{total}', totalPages.toString())}
-          </span>
-          <button
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {t('next') || 'Next'}
-          </button>
+          {loading ? (
+            <Loader2 className="animate-spin h-8 w-8 mx-auto text-primary" />
+          ) : (
+            <p className="text-muted-foreground">{t('noProductsMatched') || 'No products found.'}</p>
+          )}
         </div>
       )}
     </div>

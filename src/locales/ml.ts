@@ -92,4 +92,12 @@ export const ml = {
     followingUpdates: "അപ്‌ഡേറ്റുകൾ",
     follow: "പിന്തുടരുക",
     following: "പിന്തുടരുന്നു",
+    newest: "ഏറ്റവും പുതിയത്",
+    priceLowHigh: "വില: കുറഞ്ഞതിൽ നിന്ന് കൂടിയതിലേക്ക്",
+    priceHighLow: "വില: കൂടിയതിൽ നിന്ന് കുറഞ്ഞതിലേക്ക്",
+    nameAZ: "പേര്: A-Z",
+    quantity: "എണ്ണം",
+    buyNow: "ഇപ്പോൾ വാങ്ങുക",
+    addToWishlist: "വിഷ്‌ലിസ്റ്റിൽ ചേർക്കുക",
+    removeFromWishlist: "വിഷ്‌ലിസ്റ്റിൽ നിന്ന് നീക്കം ചെയ്യുക",
 };

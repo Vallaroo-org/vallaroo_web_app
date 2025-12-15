@@ -92,4 +92,12 @@ export const en = {
   followingUpdates: "Updates",
   follow: "Follow",
   following: "Following",
+  newest: "Newest",
+  priceLowHigh: "Price: Low to High",
+  priceHighLow: "Price: High to Low",
+  nameAZ: "Name: A-Z",
+  quantity: "Quantity",
+  buyNow: "Buy Now",
+  addToWishlist: "Add to Wishlist",
+  removeFromWishlist: "Remove from Wishlist",
 };

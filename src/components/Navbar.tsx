@@ -3,12 +3,30 @@
 import Link from 'next/link';
 import { ThemeToggle } from './ThemeToggle';
 import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useLanguage } from '../context/LanguageContext';
+import { useCart } from '../context/CartContext';
 import { ShoppingCart, User, LogIn, MapPin } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useLocation } from '../context/LocationContext';
+
+// Cart Icon with badge
+const CartIcon = () => {
+  const { getCartItemCount } = useCart();
+  const count = getCartItemCount();
+
+  return (
+    <Link href="/cart" className="p-2 rounded-full hover:bg-accent transition-colors relative">
+      <ShoppingCart className="w-5 h-5" />
+      {count > 0 && (
+        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-[20px] flex items-center justify-center px-1 shadow-lg animate-pulse ring-2 ring-red-500/30">
+          {count > 99 ? '99+' : count}
+        </span>
+      )}
+    </Link>
+  );
+};
 
 const Navbar = () => {
   const { resolvedTheme } = useTheme();
@@ -17,6 +35,7 @@ const Navbar = () => {
   const { placeName, requestLocation, error: locationError } = useLocation();
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -38,6 +57,35 @@ const Navbar = () => {
       alert(`Location Error: ${locationError}`);
     }
   }, [locationError]);
+
+  // Close menu on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isMenuOpen) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isMenuOpen]);
+
+  // Close menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -87,9 +135,7 @@ const Navbar = () => {
         <div className="hidden md:flex items-center space-x-4">
           <LanguageSwitcher />
           <ThemeToggle />
-          <Link href="/cart" className="p-2 rounded-full hover:bg-accent transition-colors relative">
-            <ShoppingCart className="w-5 h-5" />
-          </Link>
+          <CartIcon />
           {user ? (
             <Link href="/profile" className="p-2 rounded-full hover:bg-accent transition-colors">
               <User className="w-5 h-5" />
@@ -103,9 +149,7 @@ const Navbar = () => {
 
         {/* Mobile Right Side: Cart & Hamburger */}
         <div className="flex md:hidden items-center gap-4">
-          <Link href="/cart" className="p-2 rounded-full hover:bg-accent transition-colors">
-            <ShoppingCart className="w-5 h-5" />
-          </Link>
+          <CartIcon />
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="p-2 -mr-2 rounded-md hover:bg-accent transition-colors"
@@ -134,8 +178,10 @@ const Navbar = () => {
           />
 
           {/* Menu Content */}
-          <div className={`md:hidden fixed left-0 top-16 w-full border-b border-border px-4 py-6 space-y-6 shadow-xl animate-in slide-in-from-top-2 z-[101] ${resolvedTheme === 'dark' ? 'bg-black text-white' : 'bg-white text-black'
-            }`}>
+          <div
+            ref={menuRef}
+            className={`md:hidden fixed left-0 top-16 w-full border-b border-border px-4 py-6 space-y-6 shadow-xl animate-in slide-in-from-top-2 z-[101] ${resolvedTheme === 'dark' ? 'bg-black text-white' : 'bg-white text-black'
+              }`}>
             <div className="space-y-4">
               <button
                 onClick={() => { requestLocation(); setIsMenuOpen(false); }}
