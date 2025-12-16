@@ -8,11 +8,11 @@ const Footer = () => {
                     &copy; {new Date().getFullYear()} Vallaroo. All rights reserved.
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-sm text-muted-foreground text-center">
-                    <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
-                    <Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
-                    <Link href="/refund-policy" className="hover:text-foreground transition-colors">Refund Policy</Link>
-                    <Link href="/shipping-policy" className="hover:text-foreground transition-colors">Shipping Policy</Link>
-                    <Link href="/contact" className="hover:text-foreground transition-colors">Contact Us</Link>
+                    <Link href="/privacy" prefetch={false} className="hover:text-foreground transition-colors">Privacy Policy</Link>
+                    <Link href="/terms" prefetch={false} className="hover:text-foreground transition-colors">Terms of Service</Link>
+                    <Link href="/refund-policy" prefetch={false} className="hover:text-foreground transition-colors">Refund Policy</Link>
+                    <Link href="/shipping-policy" prefetch={false} className="hover:text-foreground transition-colors">Shipping Policy</Link>
+                    <Link href="/contact" prefetch={false} className="hover:text-foreground transition-colors">Contact Us</Link>
                 </div>
             </div>
         </footer>

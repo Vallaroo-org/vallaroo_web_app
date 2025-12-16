@@ -126,25 +126,25 @@ const GlobalProductCard = ({ product }: { product: Product }) => {
 
                     {/* Discount Badge - Only if Discount Exists */}
                     {hasDiscount && discountPercent > 0 && (
-                        <div className="absolute top-3 left-3 z-10">
-                            <span className="bg-red-600 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-md shadow-md animate-in fade-in zoom-in duration-300">
+                        <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10">
+                            <span className="bg-red-600 text-white text-[10px] sm:text-xs font-bold px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md shadow-md animate-in fade-in zoom-in duration-300">
                                 {discountPercent}% OFF
                             </span>
                         </div>
                     )}
 
                     {/* Action Buttons Overlay */}
-                    <div className="absolute top-3 right-3 flex flex-col gap-2 z-20">
+                    <div className="absolute top-2 right-2 sm:top-3 sm:right-3 flex flex-col gap-2 z-20">
                         {/* Wishlist Button */}
-                        <button onClick={toggleWishlist} className="p-2.5 rounded-full bg-black/20 backdrop-blur-md hover:bg-white transition-all duration-300 group/heart shadow-sm border border-white/10"
+                        <button onClick={toggleWishlist} className="p-2 sm:p-2.5 rounded-full bg-black/20 backdrop-blur-md hover:bg-white transition-all duration-300 group/heart shadow-sm border border-white/10"
                             title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
                         >
-                            <Heart className={`w-4 h-4 transition-colors ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-white group-hover/heart:text-red-500'}`} />
+                            <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-white group-hover/heart:text-red-500'}`} />
                         </button>
 
                         {/* Share Button */}
-                        <button onClick={handleShare} className="p-2.5 rounded-full bg-black/20 backdrop-blur-md hover:bg-white transition-all duration-300 group/share shadow-sm border border-white/10" title="Share Product">
-                            {isCopied ? (<Check className="w-4 h-4 text-green-500" />) : (<Share2 className="w-4 h-4 text-white group-hover/share:text-blue-500" />)}
+                        <button onClick={handleShare} className="p-2 sm:p-2.5 rounded-full bg-black/20 backdrop-blur-md hover:bg-white transition-all duration-300 group/share shadow-sm border border-white/10" title="Share Product">
+                            {isCopied ? (<Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500" />) : (<Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white group-hover/share:text-blue-500" />)}
                         </button>
                     </div>
 
@@ -171,32 +171,32 @@ const GlobalProductCard = ({ product }: { product: Product }) => {
 
                     {/* Price & Action */}
                     <div className="mt-auto flex items-end justify-between pt-3 border-t border-border/40">
-                        <div className="flex flex-col">
+                        <div className="flex flex-col min-w-0 flex-1 mr-2">
                             {hasDiscount ? (
-                                <div className="flex items-center gap-2 mb-0.5">
-                                    <span className="text-sm text-muted-foreground line-through decoration-red-500/50">
+                                <div className="flex flex-col items-start gap-1 mb-1 sm:flex-row sm:items-center sm:gap-2 sm:mb-0.5">
+                                    <span className="text-xs sm:text-sm text-muted-foreground line-through decoration-red-500/50">
                                         {formatPrice(mrp)}
                                     </span>
                                     {/* Darker green for light mode visibility */}
-                                    <span className="text-[10px] font-bold text-white bg-green-600 px-2 py-0.5 rounded shadow-sm">
-                                        saved {formatPrice(savedAmount)}
+                                    <span className="text-[10px] font-bold text-white bg-green-600 px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">
+                                        Save {formatPrice(savedAmount)}
                                     </span>
                                 </div>
                             ) : (
-                                <div className="h-6"></div> // Spacer to keep alignment if no discount
+                                <div className="h-4 sm:h-6"></div> // Spacer to keep alignment if no discount
                             )}
-                            <span className="font-bold text-xl text-primary tracking-tight">{formatPrice(product.price)}</span>
+                            <span className="font-bold text-lg sm:text-xl text-primary tracking-tight truncate">{formatPrice(product.price)}</span>
                         </div>
 
                         <button
                             onClick={handleAddToCart}
-                            className={`p-2.5 rounded-xl transition-all duration-300 shadow-sm active:scale-95 ${isAdded
+                            className={`p-2 sm:p-2.5 rounded-xl transition-all duration-300 shadow-sm active:scale-95 shrink-0 ${isAdded
                                 ? 'bg-green-500 text-white shadow-green-200 dark:shadow-green-900/20'
                                 : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5'
                                 }`}
                             title={t('addToCart')}
                         >
-                            {isAdded ? <Check className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
+                            {isAdded ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />}
                         </button>
                     </div>
                 </div>
