@@ -4,6 +4,15 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../lib/supabaseClient';
 
+const INDIAN_STATES = [
+    "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar",
+    "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa",
+    "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka",
+    "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya",
+    "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu",
+    "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"
+];
+
 interface AddressFormProps {
     userId: string;
     onSuccess: () => void;
@@ -22,6 +31,8 @@ export default function AddressForm({ userId, onSuccess, onCancel, initialData }
         road_name: initialData?.road_name || '',
         landmark: initialData?.landmark || '',
         city: initialData?.city || '',
+        state: initialData?.state || '',
+        country: initialData?.country || 'India', // Default to India
         pincode: initialData?.pincode || '',
         is_default: initialData?.is_default || false,
     });
@@ -37,6 +48,8 @@ export default function AddressForm({ userId, onSuccess, onCancel, initialData }
                 road_name: initialData.road_name || '',
                 landmark: initialData.landmark || '',
                 city: initialData.city || '',
+                state: initialData.state || '',
+                country: initialData.country || 'India',
                 pincode: initialData.pincode || '',
                 is_default: initialData.is_default || false,
             });
@@ -55,9 +68,23 @@ export default function AddressForm({ userId, onSuccess, onCancel, initialData }
         setLoading(true);
 
         try {
+            // Construct full address text
+            const addressComponents = [
+                formData.house_no,
+                formData.road_name,
+                formData.landmark,
+                formData.city,
+                formData.state,
+                formData.country,
+                formData.pincode
+            ].filter(Boolean); // Remove empty values
+
+            const addressText = addressComponents.join(', ');
+
             const payload = {
                 user_id: userId,
                 ...formData,
+                address_text: addressText,
             };
 
             let error;
@@ -170,6 +197,31 @@ export default function AddressForm({ userId, onSuccess, onCancel, initialData }
                         value={formData.city}
                         onChange={handleChange}
                         className="w-full border border-input bg-background rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none text-foreground transition-all placeholder:text-muted-foreground"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">State</label>
+                    <select
+                        name="state"
+                        value={formData.state}
+                        onChange={handleChange}
+                        className="w-full border border-input bg-background rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none text-foreground transition-all placeholder:text-muted-foreground appearance-none"
+                        required
+                    >
+                        <option value="" disabled>Select State</option>
+                        {INDIAN_STATES.map(state => (
+                            <option key={state} value={state}>{state}</option>
+                        ))}
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">Country</label>
+                    <input
+                        type="text"
+                        name="country"
+                        value={formData.country}
+                        readOnly
+                        className="w-full border border-input bg-muted text-muted-foreground rounded-xl px-4 py-2.5 text-sm outline-none cursor-not-allowed"
                     />
                 </div>
             </div>

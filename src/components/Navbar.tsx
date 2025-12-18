@@ -164,8 +164,8 @@ const Navbar = () => {
                 <User className="w-5 h-5" />
               </Link>
             ) : (
-              <Link href="/signin" className="p-2 rounded-full hover:bg-accent transition-colors">
-                <LogIn className="w-5 h-5" />
+              <Link href="/signin" className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer text-sm font-medium">
+                Sign In
               </Link>
             )}
           </div>

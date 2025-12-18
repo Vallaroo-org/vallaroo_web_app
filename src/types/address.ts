@@ -14,6 +14,7 @@ export interface Address {
     latitude?: number;
     longitude?: number;
     is_default: boolean;
+    address_text?: string; // Auto-generated full address text
     created_at?: string;
 }
 

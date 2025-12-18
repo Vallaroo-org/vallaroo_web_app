@@ -219,6 +219,7 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
     const [products, setProducts] = useState<Product[]>(initialProducts);
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState<SortOption>('newest');
+    const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(false);
@@ -242,6 +243,7 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
                 limit: 20,
                 search: debouncedSearch,
                 sortBy: sortBy,
+                globalCategory: selectedCategory,
                 // shopId is NOT passed, making this a global search
             });
 
@@ -266,7 +268,7 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
         } finally {
             setLoading(false);
         }
-    }, [page, debouncedSearch, sortBy]);
+    }, [page, debouncedSearch, sortBy, selectedCategory]);
 
     // Calculate Distances
     useEffect(() => {
@@ -308,14 +310,14 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
     // Effect: Search or Sort changed -> Reset and Fetch
     useEffect(() => {
         // On first render with default values and no initialProducts, fetch data
-        if (!hasInitiallyLoaded.current && debouncedSearch === '' && sortBy === 'newest' && initialProducts.length === 0) {
+        if (!hasInitiallyLoaded.current && debouncedSearch === '' && sortBy === 'newest' && selectedCategory === 'all' && initialProducts.length === 0) {
             hasInitiallyLoaded.current = true;
             loadProducts(true);
             return;
         }
 
         // If we have initialProducts and haven't changed filters, use them
-        if (debouncedSearch === '' && sortBy === 'newest' && page === 1 && products === initialProducts && initialProducts.length > 0) {
+        if (debouncedSearch === '' && sortBy === 'newest' && selectedCategory === 'all' && page === 1 && products === initialProducts && initialProducts.length > 0) {
             hasInitiallyLoaded.current = true;
             setPage(2);
             return;
@@ -325,7 +327,7 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
         hasInitiallyLoaded.current = true;
         loadProducts(true);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debouncedSearch, sortBy]);
+    }, [debouncedSearch, sortBy, selectedCategory]);
 
     // Effect: Infinite Scroll
     useEffect(() => {
@@ -352,34 +354,55 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
     return (
         <div>
             {/* Header with Search and Sort */}
-            <div className="flex flex-col sm:flex-row justify-between mb-6 gap-4 items-center">
-                {/* Sort */}
-                <div className="relative w-full sm:w-48 order-2 sm:order-1">
-                    <select
-                        className="w-full px-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer transition-shadow"
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value as SortOption)}
-                    >
-                        <option value="newest">{t('newest') || 'Newest'}</option>
-                        <option value="price_asc">{t('priceLowHigh') || 'Price: Low to High'}</option>
-                        <option value="price_desc">{t('priceHighLow') || 'Price: High to Low'}</option>
-                        <option value="name_asc">{t('nameAZ') || 'Name: A-Z'}</option>
-                    </select>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <Filter className="h-4 w-4 text-muted-foreground" />
+            <div className="flex flex-col gap-4 mb-6">
+                <div className="flex flex-col md:flex-row justify-between gap-4 items-center">
+                    {/* Search & Sort Container */}
+                    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-1">
+                        {/* Search */}
+                        <div className="relative w-full sm:max-w-md">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <input
+                                type="text"
+                                placeholder={t('searchExample') || 'Search products...'}
+                                className="w-full pl-9 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+
+                        {/* Sort */}
+                        <div className="relative w-full sm:w-48">
+                            <select
+                                className="w-full pl-4 pr-10 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer transition-shadow"
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                            >
+                                <option value="newest">{t('newest') || 'Newest'}</option>
+                                <option value="price_asc">{t('priceLowHigh') || 'Price: Low to High'}</option>
+                                <option value="price_desc">{t('priceHighLow') || 'Price: High to Low'}</option>
+                                <option value="name_asc">{t('nameAZ') || 'Name: A-Z'}</option>
+                            </select>
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                <Filter className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Search */}
-                <div className="relative w-full sm:w-64 order-1 sm:order-2">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <input
-                        type="text"
-                        placeholder={t('searchExample') || 'Search products...'}
-                        className="w-full pl-9 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                {/* Global Categories Pills */}
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+                    {['All', 'Grocery', 'Fashion', 'Electronics', 'Health', 'Home', 'Food', 'Other'].map((cat) => (
+                        <button
+                            key={cat}
+                            onClick={() => setSelectedCategory(cat === 'All' ? 'all' : cat)}
+                            className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${(selectedCategory === cat || (cat === 'All' && selectedCategory === 'all'))
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'bg-background hover:bg-muted text-muted-foreground border-border'
+                                }`}
+                        >
+                            {cat}
+                        </button>
+                    ))}
                 </div>
             </div>
 

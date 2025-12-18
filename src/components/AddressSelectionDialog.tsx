@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Address, NewAddress } from '../types/address';
-import { getUserAddresses, addUserAddress, deleteAddress } from '../lib/db/address';
+import { getUserAddresses, deleteAddress } from '../lib/db/address';
 import { supabase } from '../lib/supabaseClient';
+import AddressForm from './AddressForm';
 import { Trash2, Plus, ArrowLeft } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from 'next-themes';
@@ -21,20 +22,7 @@ export default function AddressSelectionDialog({ isOpen, onClose, onSelect }: Pr
     const [loading, setLoading] = useState(true);
     const [view, setView] = useState<'list' | 'add'>('list');
     const [submitting, setSubmitting] = useState(false);
-
-    // Form State
-    const [formData, setFormData] = useState<NewAddress>({
-        name: 'Home',
-        recipient_name: '',
-        phone_number: '',
-        house_no: '',
-        road_name: '',
-        city: '',
-        state: 'Kerala',
-        country: 'India',
-        pincode: '',
-        is_default: false
-    });
+    const [userId, setUserId] = useState<string | null>(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -46,11 +34,9 @@ export default function AddressSelectionDialog({ isOpen, onClose, onSelect }: Pr
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
+                setUserId(user.id);
                 const data = await getUserAddresses(user.id);
                 setAddresses(data);
-                // If it's the first time and we have addresses, user sees list.
-                // If no addresses, maybe show empty state or auto-switch to add? 
-                // Let's stick to list with "Add New" prominent.
             }
         } catch (err) {
             console.error(err);
@@ -59,36 +45,7 @@ export default function AddressSelectionDialog({ isOpen, onClose, onSelect }: Pr
         }
     };
 
-    const handleSave = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setSubmitting(true);
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
 
-            const newAddr = await addUserAddress(user.id, formData);
-            setAddresses([newAddr, ...addresses]); // Optimistic update
-            setView('list');
-            // Reset form
-            setFormData({
-                name: 'Home',
-                recipient_name: '',
-                phone_number: '',
-                house_no: '',
-                road_name: '',
-                city: '',
-                state: 'Kerala',
-                country: 'India',
-                pincode: '',
-                is_default: false
-            });
-        } catch (err) {
-            alert('Failed to save address');
-            console.error(err);
-        } finally {
-            setSubmitting(false);
-        }
-    };
 
     const handleDelete = async (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -104,8 +61,15 @@ export default function AddressSelectionDialog({ isOpen, onClose, onSelect }: Pr
 
     if (!isOpen) return null;
 
+    const handleBackdropClick = () => {
+        // Prevent closing if adding a new address to avoid data loss
+        if (view === 'list') {
+            onClose();
+        }
+    };
+
     return (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in" onClick={onClose}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in" onClick={handleBackdropClick}>
             <div className="bg-background w-full sm:max-w-md md:max-w-lg rounded-t-xl sm:rounded-xl shadow-2xl max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-5" onClick={(e) => e.stopPropagation()}>
                 {/* Header */}
                 <div className="p-4 border-b border-border flex justify-between items-center bg-muted/20">
@@ -162,102 +126,20 @@ export default function AddressSelectionDialog({ isOpen, onClose, onSelect }: Pr
                             </button>
                         </div>
                     ) : (
-                        <form onSubmit={handleSave} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-sm font-medium mb-1 block">Label</label>
-                                    <select
-                                        className="w-full p-2 rounded-lg border border-input bg-background"
-                                        value={formData.name}
-                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                    >
-                                        <option value="Home">Home</option>
-                                        <option value="Work">Work</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium mb-1 block">Phone</label>
-                                    <input
-                                        required
-                                        type="tel"
-                                        className="w-full p-2 rounded-lg border border-input bg-background"
-                                        value={formData.phone_number}
-                                        onChange={e => setFormData({ ...formData, phone_number: e.target.value })}
-                                        placeholder="10-digit mobile"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="text-sm font-medium mb-1 block">Full Name</label>
-                                <input
-                                    required
-                                    className="w-full p-2 rounded-lg border border-input bg-background"
-                                    value={formData.recipient_name}
-                                    onChange={e => setFormData({ ...formData, recipient_name: e.target.value })}
-                                    placeholder="Receiver's Name"
+                        <div className="p-1">
+                            {userId ? (
+                                <AddressForm
+                                    userId={userId}
+                                    onSuccess={() => {
+                                        fetchAddresses();
+                                        setView('list');
+                                    }}
+                                    onCancel={() => setView('list')}
                                 />
-                            </div>
-
-                            <div>
-                                <label className="text-sm font-medium mb-1 block">House No / Building</label>
-                                <input
-                                    required
-                                    className="w-full p-2 rounded-lg border border-input bg-background"
-                                    value={formData.house_no}
-                                    onChange={e => setFormData({ ...formData, house_no: e.target.value })}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="text-sm font-medium mb-1 block">Road / Area</label>
-                                <input
-                                    required
-                                    className="w-full p-2 rounded-lg border border-input bg-background"
-                                    value={formData.road_name}
-                                    onChange={e => setFormData({ ...formData, road_name: e.target.value })}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-sm font-medium mb-1 block">City</label>
-                                    <input
-                                        required
-                                        className="w-full p-2 rounded-lg border border-input bg-background"
-                                        value={formData.city}
-                                        onChange={e => setFormData({ ...formData, city: e.target.value })}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium mb-1 block">Pincode</label>
-                                    <input
-                                        required
-                                        className="w-full p-2 rounded-lg border border-input bg-background"
-                                        value={formData.pincode}
-                                        onChange={e => setFormData({ ...formData, pincode: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex gap-3 pt-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setView('list')}
-                                    className="flex-1 py-3 rounded-xl border border-border font-medium hover:bg-muted"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={submitting}
-                                    className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground font-bold hover:bg-primary/90"
-                                >
-                                    {submitting ? 'Saving...' : 'Save Address'}
-                                </button>
-                            </div>
-                        </form>
+                            ) : (
+                                <div>Loading user session...</div>
+                            )}
+                        </div>
                     )}
                 </div>
             </div>

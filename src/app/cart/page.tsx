@@ -108,7 +108,7 @@ const CartPage = () => {
                 .from('orders')
                 .insert({
                     shop_id: shopId,
-                    // user_id: user.id, // Commented out to fix "invalid input syntax for type uuid" if column missing or mismatched
+                    user_id: user.id,
                     customer_name: address.recipient_name || customerName, // Use recipient name if available
                     customer_phone: address.phone_number || customerPhone,
                     customer_address: customerAddress,
@@ -171,14 +171,19 @@ const CartPage = () => {
             const cleanedPhone = shopPhone.replace(/\D/g, '');
             const finalPhone = cleanedPhone.startsWith('91') ? cleanedPhone : `91${cleanedPhone}`;
             const url = `https://wa.me/${finalPhone}?text=${encodeURIComponent(message)}`;
-            window.open(url, '_blank');
 
-            // 6. Clear items for this shop from cart (optional but good UX)
-            // Note: implementing "clear only this shop" might require context update 
-            // or just removing one by one. For now I won't clear automatically 
-            // in case user wants to resend, or I'll leave it to them.
-            // actually, 'removeFromCart' is item by item.
-            // Let's just alert success? Or just let the window open.
+            // Open in new tab
+            const win = window.open(url, '_blank');
+
+            // 6. Clear items for this shop from cart
+            // Since we know the items passed were successfully "ordered", we remove them.
+            // Loop through and remove each.
+            items.forEach(item => {
+                removeFromCart(item.productId, item.variantId);
+            });
+
+            // Optional: Refocus window if possible or show success toast (native alert used here)
+            // alert("Order opened in WhatsApp! Cart updated."); 
 
         } catch (error: any) {
             console.error('Order creation failed:', JSON.stringify(error, null, 2));

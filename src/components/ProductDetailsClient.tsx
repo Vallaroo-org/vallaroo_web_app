@@ -172,15 +172,25 @@ const ProductDetailsClient = ({ product }: ProductDetailsClientProps) => {
                         <div className="flex items-center border border-border rounded-xl bg-background overflow-hidden">
                             <button
                                 onClick={decrementQuantity}
-                                className="p-3 hover:bg-muted transition-colors text-foreground disabled:opacity-50"
+                                className="p-3 hover:bg-muted transition-colors text-foreground disabled:opacity-50 cursor-pointer"
                                 disabled={quantity <= 1}
                             >
                                 <Minus className="w-4 h-4" />
                             </button>
-                            <span className="w-12 text-center font-bold text-lg">{quantity}</span>
+                            <input
+                                type="number"
+                                min="1"
+                                value={quantity}
+                                onChange={(e) => {
+                                    const val = parseInt(e.target.value);
+                                    if (!isNaN(val) && val > 0) setQuantity(val);
+                                    else if (e.target.value === '') setQuantity(1); // fallback or handle empty
+                                }}
+                                className="w-16 text-center font-bold text-lg border-x border-border bg-transparent focus:outline-none focus:ring-1 focus:ring-primary appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
                             <button
                                 onClick={incrementQuantity}
-                                className="p-3 hover:bg-muted transition-colors text-foreground"
+                                className="p-3 hover:bg-muted transition-colors text-foreground cursor-pointer"
                             >
                                 <Plus className="w-4 h-4" />
                             </button>
@@ -196,7 +206,7 @@ const ProductDetailsClient = ({ product }: ProductDetailsClientProps) => {
                     <div className="flex flex-col sm:flex-row gap-3">
                         <button
                             onClick={handleAddToCart}
-                            className="flex-1 rounded-xl bg-slate-900 dark:bg-slate-100 px-6 py-3 text-base font-bold text-white dark:text-slate-900 shadow-md shadow-slate-900/10 hover:shadow-lg hover:shadow-slate-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 min-h-[3rem]"
+                            className="flex-1 rounded-xl bg-slate-900 dark:bg-slate-100 px-6 py-3 text-base font-bold text-white dark:text-slate-900 shadow-md shadow-slate-900/10 hover:shadow-lg hover:shadow-slate-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 min-h-[3rem] cursor-pointer"
                         >
                             {isAdded ? (
                                 <>
@@ -213,7 +223,7 @@ const ProductDetailsClient = ({ product }: ProductDetailsClientProps) => {
 
                         <button
                             onClick={handleBuyNow}
-                            className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-3 text-base font-bold text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 min-h-[3rem]"
+                            className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-3 text-base font-bold text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 min-h-[3rem] cursor-pointer"
                         >
                             <Zap className="w-5 h-5 flex-shrink-0 fill-current" />
                             <span>{t('buyNow') || 'Buy Now'}</span>

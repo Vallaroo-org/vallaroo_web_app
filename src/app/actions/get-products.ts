@@ -19,6 +19,7 @@ export interface Product {
     image_urls: string[];
     category: string | null;
     category_id?: string;
+    global_category?: string;
     is_active?: boolean;
     created_at?: string;
     mrp?: number;
@@ -41,7 +42,8 @@ interface GetProductsParams {
     page?: number;
     limit?: number;
     search?: string;
-    category?: string;
+    category?: string; // Shop specific category ID
+    globalCategory?: string; // High level global category
     sortBy?: SortOption;
 }
 
@@ -51,6 +53,7 @@ export async function getProducts({
     limit = 20,
     search = '',
     category = 'all',
+    globalCategory = 'all',
     sortBy = 'newest',
 }: GetProductsParams) {
     const from = (page - 1) * limit;
@@ -58,8 +61,8 @@ export async function getProducts({
 
     // Select fields - include shops join for global view
     const selectFields = shopId
-        ? 'id, name, name_ml, price, mrp, description, description_ml, image_urls, category_id, is_active, created_at'
-        : 'id, name, name_ml, price, mrp, description, description_ml, image_urls, category_id, is_active, created_at, shop_id, shops!inner (id, name, name_ml, phone_number, logo_url, is_verified, is_hidden, latitude, longitude)';
+        ? 'id, name, name_ml, price, mrp, description, description_ml, image_urls, category_id, global_category, is_active, created_at'
+        : 'id, name, name_ml, price, mrp, description, description_ml, image_urls, category_id, global_category, is_active, created_at, shop_id, shops!inner (id, name, name_ml, phone_number, logo_url, is_verified, is_hidden, latitude, longitude)';
 
     let query = supabase
         .from('products')
@@ -82,7 +85,7 @@ export async function getProducts({
         query = query.or(`name.ilike.%${search}%,name_ml.ilike.%${search}%`);
     }
 
-    // Category Filter
+    // Shop Category Filter
     if (category && category !== 'all') {
         // If the frontend passes a category NAME, we might need to join/filter by name.
         // However, ProductList logic used `p.category` which was likely just a string field or id.
@@ -106,6 +109,11 @@ export async function getProducts({
         if (category.length > 5) { // minimal check for potentially valid ID
             query = query.eq('category_id', category);
         }
+    }
+
+    // Global Category Filter
+    if (globalCategory && globalCategory !== 'all') {
+        query = query.eq('global_category', globalCategory);
     }
 
     // Sort
