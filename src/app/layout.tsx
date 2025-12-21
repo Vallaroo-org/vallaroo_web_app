@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vallaroo",
-  description: "Your local shopping companion",
+  title: "Vallaroo - Your Local Shopping Companion",
+  description: "Shop from your favorite local stores with Vallaroo. Fast delivery, fresh products, and great prices.",
 };
 
 export default function RootLayout({
