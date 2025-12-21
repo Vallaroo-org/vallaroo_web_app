@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Facebook, Instagram, Linkedin, Smartphone, Mail, Phone, MapPin } from 'lucide-react';
 
 const Footer = () => {
@@ -8,8 +9,16 @@ const Footer = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 mb-16">
                     {/* Brand Column */}
                     <div className="lg:col-span-2">
-                        <Link href="/" className="font-bold text-2xl flex items-center gap-2 mb-6 text-white">
-                            <span>Vallaroo</span>
+                        <Link href="/" className="flex items-center gap-2 mb-6">
+                            <div className="relative h-8 w-32">
+                                <Image
+                                    src="/logo-white.png"
+                                    alt="Vallaroo"
+                                    fill
+                                    className="object-contain object-left"
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                />
+                            </div>
                         </Link>
                         <p className="text-sm text-slate-400 mb-8 max-w-sm leading-relaxed">
                             Vallaroo is your local commerce super-app. From fresh groceries to fashion,
