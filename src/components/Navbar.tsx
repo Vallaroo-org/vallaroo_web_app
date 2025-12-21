@@ -3,15 +3,16 @@
 import Link from 'next/link';
 import { ThemeToggle } from './ThemeToggle';
 import { useTheme } from 'next-themes';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useLanguage } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
-import { ShoppingCart, User, LogIn, MapPin, Heart } from 'lucide-react';
+import { ShoppingCart, User, LogIn, MapPin, Heart, Search } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useLocation } from '../context/LocationContext';
 import LocationDialog from './LocationDialog';
 import { useWishlist } from '../context/WishlistContext';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 // Wishlist Icon with badge
 const WishlistIcon = () => {
@@ -47,7 +48,47 @@ const CartIcon = () => {
   );
 };
 
-const Navbar = () => {
+const SearchBar = ({ className }: { className?: string }) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(searchParams.get('search') || '');
+  const { t } = useLanguage();
+
+  useEffect(() => {
+    setQuery(searchParams.get('search') || '');
+  }, [searchParams]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams(searchParams.toString());
+    if (query.trim()) {
+      params.set('search', query.trim());
+    } else {
+      params.delete('search');
+    }
+    router.push(`/?${params.toString()}`);
+  };
+
+  return (
+    <form onSubmit={handleSearch} className={`relative ${className}`}>
+      <input
+        type="text"
+        placeholder={t('searchExample') || "Search for products..."}
+        className="w-full pl-4 pr-10 py-2 rounded-full border border-border bg-muted/50 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
+      <button
+        type="submit"
+        className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-primary hover:text-white transition-colors text-muted-foreground"
+      >
+        <Search className="w-4 h-4" />
+      </button>
+    </form>
+  );
+}
+
+const NavbarContent = () => {
   const { resolvedTheme } = useTheme();
   const { t } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -73,8 +114,6 @@ const Navbar = () => {
       subscription.unsubscribe();
     };
   }, []);
-
-  // Removed useEffect for locationError alert...
 
   // Close menu on scroll
   useEffect(() => {
@@ -108,53 +147,47 @@ const Navbar = () => {
   return (
     <>
       <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 max-w-screen-2xl items-center justify-between mx-auto px-4">
-          {/* Left Side: Logo & Desktop Links */}
-          <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center space-x-2">
-              {mounted ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={resolvedTheme === 'dark' ? "/vallaroo_dark_mode.png" : "/vallaroo_light_mode.png"}
-                  alt="Vallaroo"
-                  className="h-8"
-                />
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src="/vallaroo_light_mode.png"
-                  alt="Vallaroo"
-                  className="h-8"
-                />
-              )}
-            </Link>
+        <div className="container flex h-16 max-w-screen-2xl items-center gap-4 mx-auto px-4">
+          {/* Logo */}
+          <Link href="/" className="flex items-center space-x-2 flex-shrink-0">
+            {mounted ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={resolvedTheme === 'dark' ? "/vallaroo_dark_mode.png" : "/vallaroo_light_mode.png"}
+                alt="Vallaroo"
+                className="h-8"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src="/vallaroo_light_mode.png"
+                alt="Vallaroo"
+                className="h-8"
+              />
+            )}
+          </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-6 text-sm font-medium">
+          {/* Desktop Central Area: Location & Search */}
+          <div className="hidden md:flex items-center flex-1 gap-4 max-w-3xl mx-auto px-4">
+            {/* Location Button */}
+            <button
+              onClick={() => setShowLocationDialog(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/50 hover:bg-secondary text-foreground transition-all border border-border/50 max-w-[200px] flex-shrink-0"
+              title={t('selectLocation')}
+            >
+              <MapPin className="w-4 h-4 text-primary" />
+              <span className="truncate text-sm font-medium">
+                {placeName || t('selectLocation') || 'Select Location'}
+              </span>
+            </button>
 
-              {/* Location Button (Replaces Inline Input) */}
-              <button
-                onClick={() => setShowLocationDialog(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/50 hover:bg-secondary text-foreground transition-all border border-border/50 max-w-[200px]"
-                title={t('selectLocation')}
-              >
-                <MapPin className="w-4 h-4 text-primary" />
-                <span className="truncate text-sm font-medium">
-                  {placeName || t('selectLocation') || 'Select Location'}
-                </span>
-              </button>
-
-              <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground/60">
-                {t('discover')}
-              </Link>
-              <Link href="https://vallaroo.com" className="transition-colors hover:text-foreground/80 text-foreground/60">
-                {t('backToWebsite')}
-              </Link>
-            </div>
+            {/* Search Bar - Takes remaining space */}
+            <SearchBar className="flex-1" />
           </div>
 
           {/* Right Side: Desktop Actions */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-3 lg:space-x-4 flex-shrink-0">
+
             <LanguageSwitcher />
             <ThemeToggle />
             <WishlistIcon />
@@ -171,7 +204,7 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Right Side: Cart & Hamburger */}
-          <div className="flex md:hidden items-center gap-4">
+          <div className="flex md:hidden items-center gap-4 ml-auto">
             <WishlistIcon />
             <CartIcon />
             <button
@@ -188,6 +221,11 @@ const Navbar = () => {
               )}
             </button>
           </div>
+        </div>
+
+        {/* Mobile Search Bar Row */}
+        <div className="md:hidden border-t border-border/40 px-4 py-2 bg-background/50">
+          <SearchBar />
         </div>
 
         {/* Mobile Menu & Backdrop */}
@@ -220,20 +258,8 @@ const Navbar = () => {
                   </span>
                 </button>
 
-                <Link
-                  href="/"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-4 py-3 text-base font-medium hover:bg-accent rounded-md active:bg-accent/80 transition-colors"
-                >
-                  {t('discover')}
-                </Link>
-                <Link
-                  href="https://vallaroo.com"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-4 py-3 text-base font-medium hover:bg-accent rounded-md active:bg-accent/80 transition-colors"
-                >
-                  {t('backToWebsite')}
-                </Link>
+                {/* Discover Link Removed */}
+
                 <Link
                   href={user ? "/profile" : "/signin"}
                   onClick={() => setIsMenuOpen(false)}
@@ -262,6 +288,14 @@ const Navbar = () => {
         onClose={() => setShowLocationDialog(false)}
       />
     </>
+  );
+};
+
+const Navbar = () => {
+  return (
+    <Suspense fallback={<div className="h-16 border-b border-border/40 bg-background/95" />}>
+      <NavbarContent />
+    </Suspense>
   );
 };
 

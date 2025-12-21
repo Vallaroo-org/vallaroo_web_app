@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Search, Filter, Loader2 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { getShops, type Shop as ActionShop, type ShopSortOption } from '../app/actions/get-shops';
@@ -110,14 +111,16 @@ function useDebounce<T>(value: T, delay: number): T {
 
 const ShopList = ({ initialShops = [] }: ShopListProps) => {
     const [shops, setShops] = useState<Shop[]>(initialShops);
-    const [searchTerm, setSearchTerm] = useState('');
+    // const [searchTerm, setSearchTerm] = useState(''); // REMOVED
+    const searchParams = useSearchParams();
+    const urlSearchTerm = searchParams.get('search') || '';
     const [sortBy, setSortBy] = useState<ShopSortOption>('newest');
 
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
 
-    const debouncedSearch = useDebounce(searchTerm, 500);
+    const debouncedSearch = useDebounce(urlSearchTerm, 300);
     const observerTarget = useRef<HTMLDivElement>(null);
     const hasInitiallyLoaded = useRef(false);
     const { t } = useLanguage();
@@ -251,8 +254,8 @@ const ShopList = ({ initialShops = [] }: ShopListProps) => {
 
     return (
         <div>
-            {/* Header with Search and Sort */}
-            <div className="flex flex-col sm:flex-row justify-between mb-6 gap-4 items-center">
+            {/* Header with Sort - Search moved to Navbar */}
+            <div className="flex flex-col sm:flex-row justify-end mb-6 gap-4 items-center">
                 {/* Sort */}
                 <div className="relative w-full sm:w-48 order-2 sm:order-1">
                     <select
@@ -268,17 +271,7 @@ const ShopList = ({ initialShops = [] }: ShopListProps) => {
                     </div>
                 </div>
 
-                {/* Search */}
-                <div className="relative w-full sm:w-64 order-1 sm:order-2">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <input
-                        type="text"
-                        placeholder={t('searchShops') || 'Search shops...'}
-                        className="w-full pl-9 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
+                {/* Search removed from here */}
             </div>
 
             {shops.length > 0 ? (

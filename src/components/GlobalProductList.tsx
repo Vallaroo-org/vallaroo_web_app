@@ -1,8 +1,7 @@
-'use client';
-
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { Search, Filter, ShoppingCart, Check, Loader2, MapPin, Heart, Share2 } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Filter, ShoppingCart, Check, Loader2, MapPin, Heart, Share2, ChevronRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getProducts, type Product as ActionProduct, type SortOption } from '../app/actions/get-products';
@@ -18,8 +17,10 @@ interface GlobalProductListProps {
     initialProducts?: Product[];
 }
 
+const PRODUCT_CATEGORIES = ['Grocery', 'Fashion', 'Electronics', 'Health', 'Home', 'Food', 'Other'];
+
 // ProductCard for Global View (shows shop name)
-const GlobalProductCard = ({ product }: { product: Product }) => {
+const GlobalProductCard = ({ product, className = "" }: { product: Product, className?: string }) => {
     const [isAdded, setIsAdded] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
     const { addToCart } = useCart();
@@ -104,10 +105,10 @@ const GlobalProductCard = ({ product }: { product: Product }) => {
     const savedAmount = hasDiscount ? mrp - product.price : 0;
 
     return (
-        <Link href={`/product/${product.id}`} className="group block h-full">
+        <Link href={`/product/${product.id}`} className={`group block h-full ${className}`}>
             <div className="bg-card text-card-foreground rounded-2xl overflow-hidden border border-border/40 shadow-sm hover:shadow-2xl hover:border-primary/20 transition-all duration-300 h-full flex flex-col relative group-hover:-translate-y-1">
                 {/* Image Section */}
-                <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted">
+                <div className="relative aspect-square w-full overflow-hidden bg-muted">
                     {product.image_urls?.[0] ? (
                         <div className="w-full h-full relative">
                             {/* Using next/image would be better but keeping current img tag structure for minimal diff */}
@@ -205,6 +206,119 @@ const GlobalProductCard = ({ product }: { product: Product }) => {
     );
 };
 
+// Component for a horizontal scrolling section
+const CategorySection = ({
+    category,
+    onViewAll
+}: {
+    category: string;
+    onViewAll: (category: string) => void;
+}) => {
+    const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
+    const { latitude, longitude } = useLocation();
+
+    useEffect(() => {
+        const fetchSectionProducts = async () => {
+            try {
+                // Fetch limited items (e.g. 5) for this category
+                const result = await getProducts({
+                    page: 1,
+                    limit: 8, // enough for a nice scroll
+                    globalCategory: category,
+                    sortBy: 'newest'
+                });
+
+                if (result.products.length > 0) {
+                    // Update Distances if location available
+                    let productsWithDist = result.products as Product[];
+
+                    if (latitude && longitude) {
+                        const shopsToLocate = new Map();
+                        productsWithDist.forEach(p => {
+                            if (!p.distance && p.shops && p.shops.latitude && p.shops.longitude) {
+                                shopsToLocate.set(p.shop_id, {
+                                    id: p.shop_id,
+                                    latitude: p.shops.latitude,
+                                    longitude: p.shops.longitude
+                                });
+                            }
+                        });
+
+                        if (shopsToLocate.size > 0) {
+                            const shopsArray = Array.from(shopsToLocate.values());
+                            const distances = await getDrivingDistances(latitude, longitude, shopsArray);
+                            if (Object.keys(distances).length > 0) {
+                                productsWithDist = productsWithDist.map(p => {
+                                    if (p.shop_id && distances[p.shop_id]) {
+                                        return { ...p, distance: distances[p.shop_id] };
+                                    }
+                                    return p;
+                                });
+                            }
+                        }
+                    }
+                    setProducts(productsWithDist);
+                }
+            } catch (err) {
+                console.error(`Failed to load ${category} section`, err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchSectionProducts();
+    }, [category, latitude, longitude]);
+
+    if (loading) return (
+        <div className="py-6 space-y-4">
+            <div className="h-8 bg-muted rounded w-32 animate-pulse"></div>
+            <div className="flex gap-4 overflow-hidden">
+                {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="min-w-[280px] h-[380px] bg-muted rounded-2xl animate-pulse"></div>
+                ))}
+            </div>
+        </div>
+    );
+
+    if (products.length === 0) return null;
+
+    return (
+        <section className="py-8 border-b border-border/40 last:border-0">
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold tracking-tight">{category}</h2>
+                <button
+                    onClick={() => onViewAll(category)}
+                    className="flex items-center gap-1 text-sm font-semibold text-primary hover:bg-primary/10 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                    View All <ChevronRight className="w-4 h-4" />
+                </button>
+            </div>
+
+            <div className="relative group/carousel">
+                <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0">
+                    {products.map(product => (
+                        <div key={product.id} className="min-w-[260px] max-w-[260px] sm:min-w-[280px] sm:max-w-[280px] snap-start h-full">
+                            <GlobalProductCard product={product} />
+                        </div>
+                    ))}
+                    <div className="min-w-[100px] flex items-center justify-center snap-start">
+                        <button
+                            onClick={() => onViewAll(category)}
+                            className="bg-card hover:bg-accent border border-border rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-all hover:scale-105"
+                        >
+                            <ChevronRight className="w-6 h-6 text-foreground" />
+                        </button>
+                    </div>
+                </div>
+                {/* Gradient fade on right for overflowing content hint */}
+                <div className="absolute right-0 top-0 bottom-6 w-24 bg-gradient-to-l from-background to-transparent pointer-events-none md:block hidden md:group-hover/carousel:opacity-0 transition-opacity" />
+            </div>
+        </section>
+    );
+};
+
+
 // Debounce Hook
 function useDebounce<T>(value: T, delay: number): T {
     const [debouncedValue, setDebouncedValue] = useState(value);
@@ -216,16 +330,20 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const urlSearchTerm = searchParams.get('search') || '';
+    const debouncedSearch = useDebounce(urlSearchTerm, 300);
+
     const [products, setProducts] = useState<Product[]>(initialProducts);
-    const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState<SortOption>('newest');
-    const [selectedCategory, setSelectedCategory] = useState<string>('all');
+    // Derived from URL
+    const selectedCategory = searchParams.get('category') || 'all';
 
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
 
-    const debouncedSearch = useDebounce(searchTerm, 500);
     const observerTarget = useRef<HTMLDivElement>(null);
     const hasInitiallyLoaded = useRef(false);
     const { t } = useLanguage();
@@ -233,8 +351,13 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
     // Location
     const { latitude, longitude } = useLocation();
 
-    // Fetch Data Function (Global - no shopId)
+    // Determine if we are in "Home View" (Sections) or "Grid View"
+    const isHomeView = selectedCategory === 'all' && debouncedSearch === '' && sortBy === 'newest';
+
+    // Fetch Data Function (Grid View)
     const loadProducts = useCallback(async (isNewSearch = false) => {
+        if (isHomeView) return; // Don't load main grid if in home view
+
         setLoading(true);
         try {
             const currentPage = isNewSearch ? 1 : page;
@@ -244,7 +367,6 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
                 search: debouncedSearch,
                 sortBy: sortBy,
                 globalCategory: selectedCategory,
-                // shopId is NOT passed, making this a global search
             });
 
             const newProducts = result.products as Product[];
@@ -254,7 +376,6 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
                 setPage(2);
             } else {
                 setProducts(prev => {
-                    // Deduplicate based on ID
                     const existingIds = new Set(prev.map(p => p.id));
                     const uniqueNew = newProducts.filter(p => !existingIds.has(p.id));
                     return [...prev, ...uniqueNew];
@@ -268,13 +389,12 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
         } finally {
             setLoading(false);
         }
-    }, [page, debouncedSearch, sortBy, selectedCategory]);
+    }, [page, debouncedSearch, sortBy, selectedCategory, isHomeView]);
 
-    // Calculate Distances
+    // Calculate Distances for Grid Data
     useEffect(() => {
         const calculateDistances = async () => {
-            if (latitude && longitude && products.length > 0) {
-                // Get unique shops from products that need distance
+            if (latitude && longitude && products.length > 0 && !isHomeView) {
                 const shopsToLocate = new Map();
 
                 products.forEach(p => {
@@ -305,32 +425,22 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
             }
         };
         calculateDistances();
-    }, [latitude, longitude, products.length]);
+    }, [latitude, longitude, products.length, isHomeView]);
 
-    // Effect: Search or Sort changed -> Reset and Fetch
+    // Effect: Search or Sort changed -> Reset and Fetch (Grid Logic)
     useEffect(() => {
-        // On first render with default values and no initialProducts, fetch data
-        if (!hasInitiallyLoaded.current && debouncedSearch === '' && sortBy === 'newest' && selectedCategory === 'all' && initialProducts.length === 0) {
-            hasInitiallyLoaded.current = true;
-            loadProducts(true);
-            return;
-        }
+        if (isHomeView) return;
 
-        // If we have initialProducts and haven't changed filters, use them
-        if (debouncedSearch === '' && sortBy === 'newest' && selectedCategory === 'all' && page === 1 && products === initialProducts && initialProducts.length > 0) {
-            hasInitiallyLoaded.current = true;
-            setPage(2);
-            return;
-        }
-
-        // Otherwise, fetch new data
+        // If switching TO grid view from home view, trigger load
         hasInitiallyLoaded.current = true;
         loadProducts(true);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [debouncedSearch, sortBy, selectedCategory]);
 
-    // Effect: Infinite Scroll
+    // Effect: Infinite Scroll (Grid Logic)
     useEffect(() => {
+        if (isHomeView) return;
+
         const observer = new IntersectionObserver(
             entries => {
                 if (entries[0].isIntersecting && hasMore && !loading) {
@@ -349,28 +459,30 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
                 observer.unobserve(observerTarget.current);
             }
         };
-    }, [hasMore, loading, loadProducts]);
+    }, [hasMore, loading, loadProducts, isHomeView]);
+
+    const updateCategory = (category: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (category === 'all') {
+            params.delete('category');
+        } else {
+            params.set('category', category);
+        }
+        router.push(`?${params.toString()}`, { scroll: false });
+    };
+
+    const handleViewAll = (category: string) => {
+        updateCategory(category);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     return (
         <div>
-            {/* Header with Search and Sort */}
+            {/* Header with Sort and Categories */}
             <div className="flex flex-col gap-4 mb-6">
                 <div className="flex flex-col md:flex-row justify-between gap-4 items-center">
-                    {/* Search & Sort Container */}
-                    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-1">
-                        {/* Search */}
-                        <div className="relative w-full sm:max-w-md">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <input
-                                type="text"
-                                placeholder={t('searchExample') || 'Search products...'}
-                                className="w-full pl-9 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-
-                        {/* Sort */}
+                    {/* Sort Container */}
+                    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-1 justify-end">
                         <div className="relative w-full sm:w-48">
                             <select
                                 className="w-full pl-4 pr-10 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer transition-shadow"
@@ -391,11 +503,20 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
 
                 {/* Global Categories Pills */}
                 <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-                    {['All', 'Grocery', 'Fashion', 'Electronics', 'Health', 'Home', 'Food', 'Other'].map((cat) => (
+                    <button
+                        onClick={() => updateCategory('all')}
+                        className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${(selectedCategory === 'all')
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'bg-background hover:bg-muted text-muted-foreground border-border'
+                            }`}
+                    >
+                        All
+                    </button>
+                    {PRODUCT_CATEGORIES.map((cat) => (
                         <button
                             key={cat}
-                            onClick={() => setSelectedCategory(cat === 'All' ? 'all' : cat)}
-                            className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${(selectedCategory === cat || (cat === 'All' && selectedCategory === 'all'))
+                            onClick={() => updateCategory(cat)}
+                            className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${(selectedCategory === cat)
                                 ? 'bg-primary text-primary-foreground border-primary'
                                 : 'bg-background hover:bg-muted text-muted-foreground border-border'
                                 }`}
@@ -406,29 +527,50 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
                 </div>
             </div>
 
-            {products.length > 0 ? (
-                <>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
-                        {products.map((product) => (
-                            <GlobalProductCard key={product.id} product={product} />
-                        ))}
-                    </div>
+            {/* MAIN CONTENT AREA */}
+            {isHomeView ? (
+                // SECTIONS VIEW (Airbnb Style)
+                <div className="space-y-4">
+                    {PRODUCT_CATEGORIES.map(category => (
+                        <CategorySection
+                            key={category}
+                            category={category}
+                            onViewAll={handleViewAll}
+                        />
+                    ))}
 
-                    {/* Loading Indicator for Infinite Scroll */}
-                    {hasMore && (
-                        <div ref={observerTarget} className="flex justify-center p-8 w-full">
-                            {loading && <Loader2 className="animate-spin h-8 w-8 text-primary" />}
+                    {/* Fallback check: if no products loaded in any section? 
+                        CategorySection handles its own empty state (returns null).
+                    */}
+                </div>
+            ) : (
+                // GRID VIEW (Existing Logic)
+                <>
+                    {products.length > 0 ? (
+                        <>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6 animate-in fade-in duration-500">
+                                {products.map((product) => (
+                                    <GlobalProductCard key={product.id} product={product} />
+                                ))}
+                            </div>
+
+                            {/* Loading Indicator for Infinite Scroll */}
+                            {hasMore && (
+                                <div ref={observerTarget} className="flex justify-center p-8 w-full">
+                                    {loading && <Loader2 className="animate-spin h-8 w-8 text-primary" />}
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <div className="text-center py-12">
+                            {loading ? (
+                                <Loader2 className="animate-spin h-8 w-8 mx-auto text-primary" />
+                            ) : (
+                                <p className="text-muted-foreground">{t('noProductsFound') || 'No products found.'}</p>
+                            )}
                         </div>
                     )}
                 </>
-            ) : (
-                <div className="text-center py-12">
-                    {loading ? (
-                        <Loader2 className="animate-spin h-8 w-8 mx-auto text-primary" />
-                    ) : (
-                        <p className="text-muted-foreground">{t('noProductsFound') || 'No products found.'}</p>
-                    )}
-                </div>
             )}
         </div>
     );

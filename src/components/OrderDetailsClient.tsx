@@ -2,12 +2,20 @@
 
 import Image from 'next/image';
 import type { OrderDetail } from '@/app/actions/get-order';
+import { supabase } from '@/lib/supabaseClient';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { Toaster, toast } from 'react-hot-toast';
 
 interface OrderDetailsClientProps {
     order: OrderDetail;
 }
 
 const OrderDetailsClient = ({ order }: OrderDetailsClientProps) => {
+    const router = useRouter();
+    const [isCancelling, setIsCancelling] = useState(false);
+    const [showCancelDialog, setShowCancelDialog] = useState(false);
+
     const shop = order.shop;
     const customerDetails = order.customer_name ? {
         name: order.customer_name,
@@ -15,18 +23,92 @@ const OrderDetailsClient = ({ order }: OrderDetailsClientProps) => {
         address: order.customer_address
     } : null;
 
+    // Add this line to force refresh when coming back from other pages if needed, 
+    // though router.refresh() handles the immediate update after action.
+
+    const handleCancelOrder = async () => {
+        try {
+            setIsCancelling(true);
+            const { error } = await supabase.rpc('cancel_order', {
+                order_id: order.id
+            });
+
+            if (error) throw error;
+
+            toast.success('Order cancelled successfully');
+            setShowCancelDialog(false);
+            router.refresh();
+        } catch (error: any) {
+            console.error('Error cancelling order:', error);
+            toast.error(error.message || 'Failed to cancel order');
+        } finally {
+            setIsCancelling(false);
+        }
+    };
+
     return (
         <div className="py-12 px-4 sm:px-6 lg:px-8">
+            <Toaster position="top-center" />
+
+            {/* Custom Modal */}
+            {showCancelDialog && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-background rounded-xl shadow-xl max-w-md w-full p-6 space-y-4 border border-border animate-in zoom-in-95 duration-200">
+                        <div>
+                            <h3 className="text-lg font-bold">Cancel Order</h3>
+                            <p className="text-muted-foreground text-sm mt-2">
+                                Are you sure you want to cancel this order? This action cannot be undone.
+                            </p>
+                        </div>
+                        <div className="flex justify-end gap-3 pt-2">
+                            <button
+                                onClick={() => setShowCancelDialog(false)}
+                                disabled={isCancelling}
+                                className="px-4 py-2 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground text-sm font-medium transition-colors"
+                            >
+                                No, Keep Order
+                            </button>
+                            <button
+                                onClick={handleCancelOrder}
+                                disabled={isCancelling}
+                                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors flex items-center gap-2"
+                            >
+                                {isCancelling && (
+                                    <svg className="animate-spin -ml-1 mr-1 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                )}
+                                {isCancelling ? 'Cancelling...' : 'Yes, Cancel Order'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="max-w-3xl mx-auto">
                 <div className="bg-card text-card-foreground shadow-lg rounded-2xl overflow-hidden border border-border">
                     {/* Header */}
                     <div className="bg-gradient-to-r from-pink-500 to-rose-500 p-8 text-white print:bg-primary print:from-primary print:to-primary">
-                        <h1 className="text-3xl font-bold">Order Summary</h1>
-                        <p className="opacity-90 mt-2">
-                            Receipt from <span className="font-semibold">{shop.name}</span>
-                        </p>
-                        <p className="text-xs opacity-75 mt-1">Order #{order.id.slice(0, 8)}</p>
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h1 className="text-3xl font-bold">Order Summary</h1>
+                                <p className="opacity-90 mt-2">
+                                    Receipt from <span className="font-semibold">{shop.name}</span>
+                                </p>
+                                <p className="text-xs opacity-75 mt-1">Order #{order.id.slice(0, 8)}</p>
+                            </div>
+                            {order.status === 'pending' && (
+                                <button
+                                    onClick={() => setShowCancelDialog(true)}
+                                    className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-semibold transition-colors backdrop-blur-sm border border-white/10 shadow-lg"
+                                >
+                                    Cancel Order
+                                </button>
+                            )}
+                        </div>
                     </div>
+
 
                     <div className="p-8">
                         {/* Shop Info */}

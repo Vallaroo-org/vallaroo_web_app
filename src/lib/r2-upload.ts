@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabaseClient';
+import { compressImage } from './image-compression';
 
 export interface R2UploadResult {
     publicUrl: string;
@@ -10,11 +11,17 @@ export async function uploadToR2(
     folder: string = 'uploads',
     customFilename?: string
 ): Promise<R2UploadResult> {
-    // 1. Get Presigned URL from Edge Function
+    // 1. Compress Image
+    let fileToUpload = file;
+    if (file.type.startsWith('image/')) {
+        fileToUpload = await compressImage(file);
+    }
+
+    // 2. Get Presigned URL from Edge Function
     const { data, error } = await supabase.functions.invoke('storage-upload', {
         body: {
-            filename: customFilename || file.name,
-            fileType: file.type,
+            filename: customFilename || fileToUpload.name,
+            fileType: fileToUpload.type,
             folder,
         },
     });
@@ -29,12 +36,12 @@ export async function uploadToR2(
         throw new Error('Invalid response from upload signer');
     }
 
-    // 2. Upload to R2 using the Presigned URL
+    // 3. Upload to R2 using the Presigned URL
     const uploadResponse = await fetch(data.uploadUrl, {
         method: 'PUT',
-        body: file,
+        body: fileToUpload,
         headers: {
-            'Content-Type': file.type,
+            'Content-Type': fileToUpload.type,
         },
     });
 

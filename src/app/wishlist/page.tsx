@@ -117,18 +117,29 @@ export default function WishlistPage() {
                                 <div key={item.id} className="group relative bg-card text-card-foreground rounded-2xl overflow-hidden border border-border/40 shadow-sm hover:shadow-2xl hover:border-primary/20 transition-all duration-300 h-full flex flex-col hover:-translate-y-1">
                                     {/* Image Section */}
                                     <Link href={`/product/${product.id}`} className="relative aspect-[4/5] w-full overflow-hidden bg-muted block">
-                                        {product.image_urls?.[0] ? (
-                                            // eslint-disable-next-line @next/next/no-img-element
-                                            <img
-                                                src={product.image_urls[0]}
-                                                alt={productName}
-                                                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                            />
-                                        ) : (
-                                            <div className="flex h-full items-center justify-center text-muted-foreground bg-secondary/30">
-                                                No Image
-                                            </div>
-                                        )}
+                                        {(() => {
+                                            // Robust image check
+                                            const imageUrl = product.image_urls && Array.isArray(product.image_urls) && product.image_urls.length > 0
+                                                ? product.image_urls[0]
+                                                : null;
+
+                                            return imageUrl ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img
+                                                    src={imageUrl}
+                                                    alt={productName}
+                                                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                    onError={(e) => {
+                                                        // Fallback on error
+                                                        (e.target as HTMLImageElement).src = 'https://placehold.co/400x500?text=No+Image';
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="flex h-full items-center justify-center text-muted-foreground bg-secondary/30">
+                                                    No Image
+                                                </div>
+                                            );
+                                        })()}
 
                                         {/* Discount Badge */}
                                         {hasDiscount && discountPercent > 0 && (

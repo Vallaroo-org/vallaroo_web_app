@@ -160,7 +160,7 @@ const CartPage = () => {
             // Generate link (using window.location.origin to be dynamic)
             const origin = typeof window !== 'undefined' ? window.location.origin : 'https://vallaroo.com';
 
-            // Note: The user requested "https://app.vallaroo.com/order?id=...", 
+            // Note: The user requested "https://vallaroo.com/order?id=...", 
             // but for this web app, it should link to THIS web app's order page if it exists, 
             // or just the generic domain. 
             // Since we implemented /order/page.tsx previously (I recall seeing it in edited_files!), 
@@ -201,6 +201,12 @@ const CartPage = () => {
                     <span className="text-lg font-medium text-muted-foreground bg-muted px-3 py-1 rounded-full">
                         {totalItems}
                     </span>
+                    <Link
+                        href="/profile/orders"
+                        className="ml-auto text-sm font-medium text-primary hover:underline flex items-center gap-1"
+                    >
+                        {t('myOrders') || 'Past Orders'} <ArrowRight className="w-4 h-4" />
+                    </Link>
                 </h1>
 
                 {shopIds.length === 0 ? (

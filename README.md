@@ -47,7 +47,7 @@ Create a `.env.local` file in the root directory and add your Supabase credentia
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-NEXT_PUBLIC_BASE_URL=https://app.vallaroo.com
+NEXT_PUBLIC_BASE_URL=https://vallaroo.com
 ```
 
 ### Running Locally

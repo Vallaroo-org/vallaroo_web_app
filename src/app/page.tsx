@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ShopList from '../components/ShopList';
@@ -9,8 +9,9 @@ import FollowingStories from '../components/FollowingStories';
 import { MapPin, X, Navigation } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useLocation } from '../context/LocationContext';
+import AdBanner from '../components/AdBanner';
 
-const DiscoverPage = () => {
+const DiscoverContent = () => {
   const [activeTab, setActiveTab] = useState<'shops' | 'products'>('products');
   const { placeName, requestLocation, setManualLocation, permissionStatus, isLoading: isLocationLoading } = useLocation();
   const { t } = useLanguage();
@@ -53,6 +54,9 @@ const DiscoverPage = () => {
             </button>
           </div>
 
+          {/* Ad Banner - Top Carousel */}
+          <AdBanner placement="home_top_carousel" className="h-48 md:h-64 mb-6" />
+
           <FollowingStories />
         </div>
 
@@ -77,6 +81,9 @@ const DiscoverPage = () => {
             {t('shops')}
           </button>
         </div>
+
+        {/* Ad Banner - Feed Insert */}
+        <AdBanner placement="home_feed_insert" className="h-40 md:h-56 mb-8" />
 
         {/* Content */}
         {activeTab === 'shops' ? (
@@ -155,6 +162,14 @@ const DiscoverPage = () => {
         </div>
       )}
     </div>
+  );
+};
+
+const DiscoverPage = () => {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <DiscoverContent />
+    </Suspense>
   );
 };
 
