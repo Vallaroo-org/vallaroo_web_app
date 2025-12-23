@@ -61,9 +61,9 @@ export default function InstallPrompt() {
             <div className="flex items-start gap-4">
                 <div className="shrink-0 p-2 bg-white dark:bg-gray-950 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
                     <img
-                        src="/v-icon.png"
+                        src="/v-icon-black.png"
                         alt="Vallaroo Logo"
-                        className="w-10 h-10 object-contain invert dark:invert-0"
+                        className="w-10 h-10 object-contain dark:invert"
                     />
                 </div>
                 <div className="flex-1">
