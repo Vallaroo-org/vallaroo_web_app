@@ -58,11 +58,31 @@ export default function InstallPrompt() {
 
     return (
         <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-2xl p-4 z-50 animate-in slide-in-from-bottom-5 duration-500">
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-4">
+                <div className="shrink-0 p-2 bg-gray-100 dark:bg-gray-800 rounded-xl">
+                    <img
+                        src="/vallaroo-logo-black.png"
+                        alt="Vallaroo Logo"
+                        className="w-10 h-10 object-contain dark:hidden"
+                    />
+                    <img
+                        src="/vallaroo-logo-white.png"
+                        alt="Vallaroo Logo"
+                        className="w-10 h-10 object-contain hidden dark:block"
+                    />
+                </div>
                 <div className="flex-1">
-                    <h3 className="font-semibold text-lg mb-1 dark:text-white">
-                        Install Vallaroo
-                    </h3>
+                    <div className="flex justify-between items-start">
+                        <h3 className="font-semibold text-lg mb-1 dark:text-white">
+                            Install Vallaroo
+                        </h3>
+                        <button
+                            onClick={handleDismiss}
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors -mt-1 -mr-1"
+                        >
+                            <X size={20} />
+                        </button>
+                    </div>
                     <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
                         Install our app for a better experience, offline access, and easier
                         shopping!
@@ -83,12 +103,6 @@ export default function InstallPrompt() {
                         </button>
                     </div>
                 </div>
-                <button
-                    onClick={handleDismiss}
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-                >
-                    <X size={20} />
-                </button>
             </div>
         </div>
     );
