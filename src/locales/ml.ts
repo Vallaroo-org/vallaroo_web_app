@@ -51,7 +51,7 @@ export const ml = {
     exploreBest: "നിങ്ങൾക്ക് ചുറ്റുമുള്ള മികച്ച പ്രാദേശിക ബിസിനസ്സുകളും ഉൽപ്പന്നങ്ങളും കണ്ടെത്തുക.",
     searchStores: "കടകൾ",
     searchProducts: "ഉൽപ്പന്നങ്ങൾ",
-    freshFinds: "പുതിയ കണ്ടുപിടുത്തങ്ങൾ",
+    freshFinds: "അടുത്തുള്ള ഉൽപ്പന്നങ്ങൾ",
     noShopsFound: "നിങ്ങളുടെ തിരയലുമായി പൊരുത്തപ്പെടുന്ന കടകളൊന്നും കണ്ടെത്തിയില്ല.",
     noProductsFound: "No products found matching your search.",
     backToWebsite: "വെബ്‌സൈറ്റിലേക്ക് മടങ്ങുക",

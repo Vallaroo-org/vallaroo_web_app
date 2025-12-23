@@ -49,7 +49,7 @@ export const en = {
   exploreBest: "Explore the best local businesses and unique products around you.",
   searchStores: "stores",
   searchProducts: "products",
-  freshFinds: "Fresh Finds",
+  freshFinds: "Nearby Products",
   noShopsFound: "No shops found matching your search.",
   noProductsFound: "No products found matching your search.",
   backToWebsite: "Back to Website",
