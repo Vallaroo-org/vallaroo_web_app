@@ -1,7 +1,9 @@
 export const ml = {
     appTitle: "വല്ലാറൂ",
     nearbyShops: "അടുത്തുള്ള കടകൾ",
+    nearbyServices: "അടുത്തുള്ള സേവനങ്ങൾ",
     products: "ഉൽപ്പന്നങ്ങൾ",
+    services: "സേവനങ്ങൾ",
     offers: "ഓഫറുകൾ",
     shops: "കടകൾ",
     searchExample: "ഉൽപ്പന്നങ്ങൾ തിരയുക...",
@@ -107,4 +109,8 @@ export const ml = {
     wishlist: "എന്റെ വിഷ്‌ലിസ്റ്റ്",
     wishlistEmpty: "നിങ്ങളുടെ വിഷ്‌ലിസ്റ്റ് ശൂന്യമാണ്",
     wishlistEmptyDesc: "വിപുലമായ ശേഖരം പര്യവേക്ഷണം ചെയ്ത് നിങ്ങൾക്ക് ഇഷ്ടപ്പെട്ടത് കണ്ടെത്തുക!",
+    inquire: "അന്വേഷിക്കുക",
+    searchServices: "സേവനങ്ങൾ തിരയുക...",
+    noServicesFound: "സേവനങ്ങൾ ഒന്നും കണ്ടെത്തിയില്ല.",
+    freshServices: "പുതിയ സേവനങ്ങൾ",
 };
