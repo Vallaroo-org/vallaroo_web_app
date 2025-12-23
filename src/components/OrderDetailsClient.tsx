@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface OrderDetailsClientProps {
     order: OrderDetail;
@@ -13,6 +14,7 @@ interface OrderDetailsClientProps {
 
 const OrderDetailsClient = ({ order }: OrderDetailsClientProps) => {
     const router = useRouter();
+    const { t } = useLanguage();
     const [isCancelling, setIsCancelling] = useState(false);
     const [showCancelDialog, setShowCancelDialog] = useState(false);
 
@@ -55,7 +57,7 @@ const OrderDetailsClient = ({ order }: OrderDetailsClientProps) => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="bg-background rounded-xl shadow-xl max-w-md w-full p-6 space-y-4 border border-border animate-in zoom-in-95 duration-200">
                         <div>
-                            <h3 className="text-lg font-bold">Cancel Order</h3>
+                            <h3 className="text-lg font-bold">{t('cancelOrder')}</h3>
                             <p className="text-muted-foreground text-sm mt-2">
                                 Are you sure you want to cancel this order? This action cannot be undone.
                             </p>
@@ -79,7 +81,7 @@ const OrderDetailsClient = ({ order }: OrderDetailsClientProps) => {
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
                                 )}
-                                {isCancelling ? 'Cancelling...' : 'Yes, Cancel Order'}
+                                {isCancelling ? 'Cancelling...' : `Yes, ${t('cancelOrder')}`}
                             </button>
                         </div>
                     </div>
@@ -92,9 +94,9 @@ const OrderDetailsClient = ({ order }: OrderDetailsClientProps) => {
                     <div className="bg-gradient-to-r from-pink-500 to-rose-500 p-8 text-white print:bg-primary print:from-primary print:to-primary">
                         <div className="flex justify-between items-start">
                             <div>
-                                <h1 className="text-3xl font-bold">Order Summary</h1>
+                                <h1 className="text-3xl font-bold">{t('orderSummary')}</h1>
                                 <p className="opacity-90 mt-2">
-                                    Receipt from <span className="font-semibold">{shop.name}</span>
+                                    {t('receiptFrom')} <span className="font-semibold">{shop.name}</span>
                                 </p>
                                 <p className="text-xs opacity-75 mt-1">Order #{order.id.slice(0, 8)}</p>
                             </div>
@@ -103,7 +105,7 @@ const OrderDetailsClient = ({ order }: OrderDetailsClientProps) => {
                                     onClick={() => setShowCancelDialog(true)}
                                     className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-semibold transition-colors backdrop-blur-sm border border-white/10 shadow-lg"
                                 >
-                                    Cancel Order
+                                    {t('cancelOrder')}
                                 </button>
                             )}
                         </div>
@@ -136,18 +138,18 @@ const OrderDetailsClient = ({ order }: OrderDetailsClientProps) => {
                         {/* Customer Details */}
                         {customerDetails && (
                             <div className="mb-8 p-4 bg-muted/50 rounded-lg">
-                                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Customer</h3>
+                                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t('customerDetails')}</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                     <div>
-                                        <p className="text-muted-foreground">Name</p>
+                                        <p className="text-muted-foreground">{t('name')}</p>
                                         <p className="font-medium text-foreground">{customerDetails.name}</p>
                                     </div>
                                     <div>
-                                        <p className="text-muted-foreground">Phone</p>
+                                        <p className="text-muted-foreground">{t('phone')}</p>
                                         <p className="font-medium text-foreground">{customerDetails.phone}</p>
                                     </div>
                                     <div className="md:col-span-2">
-                                        <p className="text-muted-foreground">Address</p>
+                                        <p className="text-muted-foreground">{t('address')}</p>
                                         <p className="font-medium text-foreground">{customerDetails.address}</p>
                                     </div>
                                 </div>
@@ -191,7 +193,7 @@ const OrderDetailsClient = ({ order }: OrderDetailsClientProps) => {
 
                         {/* Total */}
                         <div className="border-t border-border mt-8 pt-8 flex justify-between items-center">
-                            <span className="text-lg font-medium text-muted-foreground">Total Amount</span>
+                            <span className="text-lg font-medium text-muted-foreground">{t('totalAmount')}</span>
                             <span className="text-3xl font-bold text-green-600 dark:text-green-500">
                                 ₹{order.total_amount}
                             </span>

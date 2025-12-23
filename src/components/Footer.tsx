@@ -1,8 +1,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Facebook, Instagram, Linkedin, Smartphone, Mail, Phone, MapPin } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 const Footer = () => {
+    const { t } = useLanguage();
+
     return (
         <footer className="bg-[#0f172a] text-slate-300 pt-16 pb-8">
             <div className="container mx-auto px-4 max-w-screen-2xl">
@@ -21,8 +24,7 @@ const Footer = () => {
                             </div>
                         </Link>
                         <p className="text-sm text-slate-400 mb-8 max-w-sm leading-relaxed">
-                            Vallaroo is your local commerce super-app. From fresh groceries to fashion,
-                            get everything delivered from your trusted neighborhood stores in minutes.
+                            {t('exploreBest')}
                         </p>
                         <div className="flex gap-4">
                             <Link href="#" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-primary hover:text-white transition-all"><Facebook className="w-5 h-5" /></Link>
@@ -36,32 +38,32 @@ const Footer = () => {
 
                     {/* Company Column */}
                     <div>
-                        <h3 className="font-bold text-white mb-6 uppercase tracking-wider text-sm">Company</h3>
+                        <h3 className="font-bold text-white mb-6 uppercase tracking-wider text-sm">{t('company')}</h3>
                         <ul className="space-y-4 text-sm text-slate-400">
-                            <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
-                            <li><Link href="/careers" className="hover:text-white transition-colors">Careers</Link></li>
-                            <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
+                            <li><Link href="/about" className="hover:text-white transition-colors">{t('aboutUs')}</Link></li>
+                            <li><Link href="/careers" className="hover:text-white transition-colors">{t('careers')}</Link></li>
+                            <li><Link href="/contact" className="hover:text-white transition-colors">{t('contactUs')}</Link></li>
                         </ul>
                     </div>
 
                     {/* Resources Column */}
                     <div>
-                        <h3 className="font-bold text-white mb-6 uppercase tracking-wider text-sm">For You</h3>
+                        <h3 className="font-bold text-white mb-6 uppercase tracking-wider text-sm">{t('forYou')}</h3>
                         <ul className="space-y-4 text-sm text-slate-400">
-                            <li><Link href="/partner" className="hover:text-white transition-colors flex items-center gap-2">Sell on Vallaroo</Link></li>
-                            <li><Link href="/delivery" className="hover:text-white transition-colors flex items-center gap-2">Become a Partner</Link></li>
-                            <li><Link href="/apps" className="hover:text-white transition-colors">Get the App</Link></li>
+                            <li><Link href="/partner" className="hover:text-white transition-colors flex items-center gap-2">{t('sellOnVallaroo')}</Link></li>
+                            <li><Link href="/delivery" className="hover:text-white transition-colors flex items-center gap-2">{t('becomeAPartner')}</Link></li>
+                            <li><Link href="/apps" className="hover:text-white transition-colors">{t('getTheApp')}</Link></li>
                         </ul>
                     </div>
 
                     {/* Contact Column */}
                     <div>
-                        <h3 className="font-bold text-white mb-6 uppercase tracking-wider text-sm">Legal</h3>
+                        <h3 className="font-bold text-white mb-6 uppercase tracking-wider text-sm">{t('legal')}</h3>
                         <ul className="space-y-4 text-sm text-slate-400">
-                            <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
-                            <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-                            <li><Link href="/refund-policy" className="hover:text-white transition-colors">Refund Policy</Link></li>
-                            <li><Link href="/shipping-policy" className="hover:text-white transition-colors">Shipping Policy</Link></li>
+                            <li><Link href="/terms" className="hover:text-white transition-colors">{t('termsOfService')}</Link></li>
+                            <li><Link href="/privacy" className="hover:text-white transition-colors">{t('privacyPolicy')}</Link></li>
+                            <li><Link href="/refund-policy" className="hover:text-white transition-colors">{t('refundPolicy')}</Link></li>
+                            <li><Link href="/shipping-policy" className="hover:text-white transition-colors">{t('shippingPolicy')}</Link></li>
                         </ul>
                     </div>
                 </div>
@@ -69,7 +71,7 @@ const Footer = () => {
                 {/* Cities / Expansion Placeholder (Like Swiggy) */}
                 <div className="border-t border-slate-800 pt-8 pb-8">
                     <h3 className="font-bold text-white mb-4 uppercase tracking-wider text-sm flex items-center gap-2">
-                        We Deliver To <span className="text-xs normal-case bg-primary/20 text-primary px-2 py-0.5 rounded-full font-medium">(Coming Soon)</span>
+                        {t('weDeliverTo')} <span className="text-xs normal-case bg-primary/20 text-primary px-2 py-0.5 rounded-full font-medium">({t('comingSoon')})</span>
                     </h3>
                     <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-500">
                         <span>Kochi</span>
@@ -91,7 +93,7 @@ const Footer = () => {
 
                 {/* Bottom Bar */}
                 <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">
-                    <p>&copy; {new Date().getFullYear()} Vallaroo Technologies Pvt Ltd. All rights reserved.</p>
+                    <p>&copy; {new Date().getFullYear()} Vallaroo Technologies Pvt Ltd. {t('rightsReserved')}</p>
                 </div>
             </div>
         </footer>

@@ -116,4 +116,46 @@ export const ml = {
     searchServices: "സേവനങ്ങൾ തിരയുക...",
     noServicesFound: "സേവനങ്ങൾ ഒന്നും കണ്ടെത്തിയില്ല.",
     freshServices: "പുതിയ സേവനങ്ങൾ",
+
+    // Footer
+    company: "കമ്പനി",
+    aboutUs: "ഞങ്ങളെക്കുറിച്ച്",
+    careers: "കരിയറുകൾ",
+    contactUs: "ബന്ധപ്പെടുക",
+    forYou: "നിങ്ങൾക്കായി",
+    sellOnVallaroo: "വല്ലാറൂവിൽ വിൽപ്പന നടത്തുക",
+    becomeAPartner: "പങ്കാളിയാകുക",
+    getTheApp: "ആപ്പ് നേടുക",
+    legal: "നിയമപരം",
+    termsOfService: "സേവന നിബന്ധനകൾ",
+    privacyPolicy: "സ്വകാര്യത നയം",
+    refundPolicy: "റീഫണ്ട് നയം",
+    shippingPolicy: "ഷിപ്പിംഗ് നയം",
+    weDeliverTo: "ഞങ്ങൾ ഡെലിവറി ചെയ്യുന്ന സ്ഥലങ്ങൾ",
+    comingSoon: "ഉടൻ വരുന്നു",
+    rightsReserved: "എല്ലാ അവകാശങ്ങളും നിക്ഷിപ്തം.",
+
+    // Forms
+    recipientName: "സ്വീകർത്താവിന്റെ പേര്",
+    phoneNumber: "ഫോൺ നമ്പർ",
+    pincode: "പിൻകോഡ്",
+    landmark: "ലാൻഡ്‌മാർക്ക്",
+    city: "നഗരം",
+    state: "സംസ്ഥാനം",
+    country: "രാജ്യം",
+    selectState: "സംസ്ഥാനം തിരഞ്ഞെടുക്കുക",
+    setAsDefaultAddress: "സ്ഥിരം വിലാസമായി സജ്ജമാക്കുക",
+    saveAddress: "വിലാസം സേവ് ചെയ്യുക",
+
+    // Misc
+    settings: "ക്രമീകരണങ്ങൾ",
+    visitStore: "കട സന്ദർശിക്കുക",
+    cancelOrder: "ഓർഡർ റദ്ദാക്കുക",
+    noImageAvailable: "ചിത്രം ലഭ്യമല്ല",
+    serviceProvider: "സേവന ദാതാവ്",
+    completeTitle: "നിങ്ങളുടെ പ്രൊഫൈൽ പൂർത്തിയാക്കുക",
+    makeDefault: "ഇത് എന്റെ സ്ഥിരം വിലാസമാക്കുക",
+
+    // Navbar
+    myProfile: "എന്റെ പ്രൊഫൈൽ",
 };

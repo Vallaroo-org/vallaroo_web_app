@@ -7,6 +7,7 @@ import { LocationProvider } from "../context/LocationContext";
 import { CartProvider } from "../context/CartContext";
 import { WishlistProvider } from "../context/WishlistContext";
 import ProfileCompletionCheck from "@/components/ProfileCompletionCheck";
+import InstallPrompt from "@/components/InstallPrompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,6 +22,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Vallaroo - Your Local Shopping Companion",
   description: "Shop from your favorite local stores with Vallaroo. Fast delivery, fresh products, and great prices.",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -45,6 +47,7 @@ export default function RootLayout({
               <WishlistProvider>
                 <CartProvider>
                   <ProfileCompletionCheck />
+                  <InstallPrompt />
                   {children}
                 </CartProvider>
               </WishlistProvider>

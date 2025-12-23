@@ -177,7 +177,7 @@ const NavbarContent = () => {
             >
               <MapPin className="w-4 h-4 text-primary" />
               <span className="truncate text-sm font-medium">
-                {placeName || t('selectLocation') || 'Select Location'}
+                {placeName || t('selectLocation')}
               </span>
             </button>
 
@@ -198,7 +198,7 @@ const NavbarContent = () => {
               </Link>
             ) : (
               <Link href="/signin" className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer text-sm font-medium">
-                Sign In
+                {t('signIn')}
               </Link>
             )}
           </div>
@@ -254,7 +254,7 @@ const NavbarContent = () => {
                 >
                   <MapPin className="w-5 h-5 text-primary" />
                   <span className="font-medium truncate">
-                    {placeName || t('selectLocation') || 'Select Location'}
+                    {placeName || t('selectLocation')}
                   </span>
                 </button>
 
@@ -266,12 +266,12 @@ const NavbarContent = () => {
                   className="flex w-full items-center gap-2 px-4 py-3 text-base font-medium hover:bg-accent rounded-md active:bg-accent/80 transition-colors"
                 >
                   {user ? <User className="w-5 h-5 flex-shrink-0" /> : <LogIn className="w-5 h-5 flex-shrink-0" />}
-                  <span>{user ? "My Profile" : "Sign In"}</span>
+                  <span>{user ? t('myProfile') : t('signIn')}</span>
                 </Link>
               </div>
 
               <div className="pt-4 border-t border-border flex items-center justify-between px-2">
-                <span className="text-sm font-medium text-muted-foreground">Settings</span>
+                <span className="text-sm font-medium text-muted-foreground">{t('settings')}</span>
                 <div className="flex gap-4">
                   <ThemeToggle />
                   <LanguageSwitcher />

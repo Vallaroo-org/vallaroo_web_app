@@ -86,7 +86,7 @@ const ShopCard = ({ shop }: { shop: Shop }) => {
                             </div>
                         ) : (
                             <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
-                                <span>Visit Store</span>
+                                <span>{t('visitStore')}</span>
                             </div>
                         )}
 

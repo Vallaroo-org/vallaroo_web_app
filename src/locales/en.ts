@@ -116,4 +116,46 @@ export const en = {
   searchServices: "Search services...",
   noServicesFound: "No services found.",
   freshServices: "Recent Services",
+
+  // Footer
+  company: "Company",
+  aboutUs: "About Us",
+  careers: "Careers",
+  contactUs: "Contact Us",
+  forYou: "For You",
+  sellOnVallaroo: "Sell on Vallaroo",
+  becomeAPartner: "Become a Partner",
+  getTheApp: "Get the App",
+  legal: "Legal",
+  termsOfService: "Terms of Service",
+  privacyPolicy: "Privacy Policy",
+  refundPolicy: "Refund Policy",
+  shippingPolicy: "Shipping Policy",
+  weDeliverTo: "We Deliver To",
+  comingSoon: "Coming Soon",
+  rightsReserved: "All rights reserved.",
+
+  // Forms
+  recipientName: "Recipient Name",
+  phoneNumber: "Phone Number",
+  pincode: "Pincode",
+  landmark: "Landmark",
+  city: "City",
+  state: "State",
+  country: "Country",
+  selectState: "Select State",
+  setAsDefaultAddress: "Set as default address",
+  saveAddress: "Save Address",
+
+  // Misc
+  settings: "Settings",
+  visitStore: "Visit Store",
+  cancelOrder: "Cancel Order",
+  noImageAvailable: "No image available",
+  serviceProvider: "Service Provider",
+  completeTitle: "Complete Your Profile",
+  makeDefault: "Make this my default address",
+
+  // Navbar
+  myProfile: "My Profile",
 };

@@ -127,7 +127,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, initialData }
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Recipient Name</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">{t('recipientName')}</label>
                     <input
                         type="text"
                         name="recipient_name"
@@ -138,7 +138,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, initialData }
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Phone Number</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">{t('phoneNumber')}</label>
                     <input
                         type="tel"
                         name="phone_number"
@@ -149,7 +149,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, initialData }
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Pincode</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">{t('pincode')}</label>
                     <input
                         type="text"
                         name="pincode"
@@ -160,27 +160,27 @@ export default function AddressForm({ userId, onSuccess, onCancel, initialData }
                 </div>
 
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-foreground mb-1">House No. / Flat</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">{t('address')}</label>
                     <input
                         type="text"
                         name="house_no"
+                        placeholder="House No. / Flat"
                         value={formData.house_no}
                         onChange={handleChange}
-                        className="w-full border border-input bg-background rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none text-foreground transition-all placeholder:text-muted-foreground"
+                        className="w-full border border-input bg-background rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none text-foreground transition-all placeholder:text-muted-foreground mb-2"
                     />
-                </div>
-                <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-foreground mb-1">Road Name / Area</label>
                     <input
                         type="text"
                         name="road_name"
+                        placeholder="Road Name / Area"
                         value={formData.road_name}
                         onChange={handleChange}
                         className="w-full border border-input bg-background rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none text-foreground transition-all placeholder:text-muted-foreground"
                     />
                 </div>
+
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Landmark</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">{t('landmark')}</label>
                     <input
                         type="text"
                         name="landmark"
@@ -190,7 +190,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, initialData }
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">City</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">{t('city')}</label>
                     <input
                         type="text"
                         name="city"
@@ -200,7 +200,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, initialData }
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">State</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">{t('state')}</label>
                     <select
                         name="state"
                         value={formData.state}
@@ -208,14 +208,14 @@ export default function AddressForm({ userId, onSuccess, onCancel, initialData }
                         className="w-full border border-input bg-background rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none text-foreground transition-all placeholder:text-muted-foreground appearance-none"
                         required
                     >
-                        <option value="" disabled>Select State</option>
+                        <option value="" disabled>{t('selectState')}</option>
                         {INDIAN_STATES.map(state => (
                             <option key={state} value={state}>{state}</option>
                         ))}
                     </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Country</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">{t('country')}</label>
                     <input
                         type="text"
                         name="country"
@@ -235,7 +235,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, initialData }
                     onChange={(e) => setFormData(prev => ({ ...prev, is_default: e.target.checked }))}
                     className="rounded border-input text-primary focus:ring-ring"
                 />
-                <label htmlFor="is_default" className="text-sm text-foreground">Set as default address</label>
+                <label htmlFor="is_default" className="text-sm text-foreground">{t('makeDefault')}</label>
             </div>
 
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t border-border mt-6">
@@ -252,7 +252,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, initialData }
                     className="w-full sm:w-auto px-8 py-3 text-sm font-bold text-primary-foreground bg-primary rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-all shadow-lg shadow-primary/25 active:scale-95"
                     disabled={loading}
                 >
-                    {loading ? 'Saving...' : 'Save Address'}
+                    {loading ? 'Saving...' : t('saveAddress')}
                 </button>
             </div>
         </form>
