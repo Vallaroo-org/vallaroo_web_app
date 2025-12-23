@@ -2,6 +2,7 @@ export const en = {
   appTitle: "Vallaroo",
   nearbyShops: "Nearby Shops",
   products: "Products",
+  services: "Services",
   offers: "Offers",
   shops: "Shops",
   searchExample: "Search for products...",
@@ -107,4 +108,8 @@ export const en = {
   wishlist: "My Wishlist",
   wishlistEmpty: "Your wishlist is empty",
   wishlistEmptyDesc: "Explore our wide selection and find something you love!",
+  inquire: "Inquire",
+  searchServices: "Search services...",
+  noServicesFound: "No services found.",
+  freshServices: "Recent Services",
 };

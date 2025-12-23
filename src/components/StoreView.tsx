@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import ProductList from './ProductList';
+import ServiceList from './ServiceList';
 import StoryViewer from './StoryViewer';
 import StoreDetails from './StoreDetails';
 
@@ -17,12 +18,31 @@ interface Story {
 interface StoreViewProps {
     store: any;
     products: any[];
+    services?: any[];
     stories: Story[];
 }
 
-const StoreView = ({ store, products, stories }: StoreViewProps) => {
+const StoreView = ({ store, products, services = [], stories }: StoreViewProps) => {
     const { t, locale } = useLanguage();
-    const [activeTab, setActiveTab] = useState<'products' | 'about' | 'gallery'>('products');
+
+    // Determine default active tab based on visibility
+    const getInitialTab = () => {
+        const hideProducts = store.is_temporarily_closed && store.hide_products_during_closure;
+        const hideServices = store.is_temporarily_closed && store.hide_services_during_closure;
+
+        if (store.shop_type === 'service') {
+            return !hideServices ? 'services' : 'about';
+        }
+        if (store.shop_type === 'product') {
+            return !hideProducts ? 'products' : 'about';
+        }
+        // Both
+        if (!hideProducts) return 'products';
+        if (!hideServices) return 'services';
+        return 'about';
+    };
+
+    const [activeTab, setActiveTab] = useState<'products' | 'services' | 'about' | 'gallery'>(getInitialTab());
     const [showStories, setShowStories] = useState(false);
 
     const [copied, setCopied] = useState(false);
@@ -132,26 +152,28 @@ const StoreView = ({ store, products, stories }: StoreViewProps) => {
         });
     };
 
-    const tabs = [
-        { id: 'products', label: t('products') },
-        { id: 'gallery', label: t('gallery') },
-        { id: 'about', label: t('prodInfo') } // Mapping 'about' to 'Product Info' key or create new 'about' key? Using prodInfo for now or create specific key. The tab was "About". Let's assume 'prodInfo' is close or add 'about' key. 'prodInfo' is "Product Info". Let's add 'about' key to locale if missing or use fallback. Actually t('about') is better. I will add 'about' key to locales in next step if needed, or mapping 'prodInfo' is OK but maybe inaccurate.
-        // Wait, I didn't add 'about' key. Let's use 'description' or just hardcode mapped values if I can't edit locale now. 
-        // I'll stick to 'prodInfo' for now as it exists, or 'buttons'. 
-        // Actually, the original code had `['products', 'gallery', 'about']` and capitalized them.
-        // I will map them:
-    ];
+    const tabs = [];
 
-    const tabLabel = (tab: string) => {
-        if (tab === 'products') return t('products');
-        if (tab === 'gallery') return t('gallery');
-        if (tab === 'about') return t('description'); // using description for about
-        return tab;
-    };
+    if (store.shop_type !== 'service') {
+        const hideProducts = store.is_temporarily_closed && store.hide_products_during_closure;
+        if (!hideProducts) {
+            tabs.push({ id: 'products', label: t('products') });
+        }
+    }
+
+    if (store.shop_type === 'service' || store.shop_type === 'both') {
+        const hideServices = store.is_temporarily_closed && store.hide_services_during_closure;
+        if (!hideServices) {
+            tabs.push({ id: 'services', label: t('services') || 'Services' });
+        }
+    }
+
+    tabs.push({ id: 'gallery', label: t('gallery') });
+    tabs.push({ id: 'about', label: t('prodInfo') });
 
     const shopName = getLocalizedContent(store, 'name');
     const shopCity = getLocalizedContent(store, 'city');
-    const shopCategory = store.category; // Assuming category is not localized yet, or maybe it is? keeping as is.
+    const shopCategory = store.category;
 
     return (
         <div className="bg-background min-h-screen pb-12">
@@ -171,6 +193,20 @@ const StoreView = ({ store, products, stories }: StoreViewProps) => {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent"></div>
             </div>
+
+            {/* Temporary Closure Banner */}
+            {store.is_temporarily_closed && !store.hide_shop_during_closure && (
+                <div className="bg-amber-500 text-white px-4 py-3 text-center relative z-20 shadow-md">
+                    <div className="container mx-auto flex flex-col sm:flex-row items-center justify-center gap-2">
+                        <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <p className="font-medium">
+                            <span className="font-bold">Temporarily Closed</span>
+                            {store.closure_reason ? `: ${store.closure_reason}` : ''}
+                            {store.closure_end_date && ` (Back on ${new Date(store.closure_end_date).toLocaleDateString()})`}
+                        </p>
+                    </div>
+                </div>
+            )}
 
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 -mt-16 sm:-mt-24">
                 <div className="bg-background/80 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-4 sm:p-6 flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6 text-center sm:text-left">
@@ -284,16 +320,16 @@ const StoreView = ({ store, products, stories }: StoreViewProps) => {
                 {/* Sticky Tabs */}
                 <div className="mt-8 sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border -mx-4 px-4 sm:mx-0 sm:px-0 sm:rounded-t-xl transition-all">
                     <nav className="flex space-x-8 overflow-x-auto scrollbar-hide" aria-label="Tabs">
-                        {['products', 'gallery', 'about'].map((tab) => (
+                        {tabs.map((tab) => (
                             <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab as any)}
-                                className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors relative ${activeTab === tab
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id as any)}
+                                className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors relative ${activeTab === tab.id
                                     ? 'border-primary text-primary'
                                     : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                                     }`}
                             >
-                                {tabLabel(tab)}
+                                {tab.label}
                             </button>
                         ))}
                     </nav>
@@ -301,14 +337,25 @@ const StoreView = ({ store, products, stories }: StoreViewProps) => {
 
                 {/* Content */}
                 <div className="mt-6 min-h-[500px]">
-                    {activeTab === 'products' ? (
+                    {activeTab === 'products' && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-2xl font-bold mb-6 tracking-tight">{t('allProducts')}</h2>
                             <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
                                 <ProductList initialProducts={products} shop={store} />
                             </div>
                         </div>
-                    ) : activeTab === 'gallery' ? (
+                    )}
+
+                    {activeTab === 'services' && (
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <h2 className="text-2xl font-bold mb-6 tracking-tight">{t('services') || 'Services'}</h2>
+                            <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
+                                <ServiceList initialServices={services} shop={store} />
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'gallery' && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-2xl font-bold mb-6 tracking-tight">{t('gallery')}</h2>
                             <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
@@ -321,7 +368,17 @@ const StoreView = ({ store, products, stories }: StoreViewProps) => {
                                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
                                         </div>
                                     )}
-                                    {/* Product Images as Gallery */}
+
+                                    {/* Shop Gallery Images */}
+                                    {store.gallery_urls?.map((url: string, index: number) => (
+                                        <div key={`gallery-${index}`} className="aspect-square relative rounded-xl overflow-hidden group cursor-pointer shadow-sm hover:shadow-md transition-all">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={url} alt={`Gallery Image ${index + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
+                                        </div>
+                                    ))}
+
+                                    {/* Product Images as Gallery (Fallback/Addition) */}
                                     {products.slice(0, 11).map((product) => (
                                         product.image_urls?.[0] && (
                                             <div key={product.id} className="aspect-square relative rounded-xl overflow-hidden group cursor-pointer shadow-sm hover:shadow-md transition-all">
@@ -332,7 +389,7 @@ const StoreView = ({ store, products, stories }: StoreViewProps) => {
                                         )
                                     ))}
                                 </div>
-                                {products.length === 0 && !store.cover_image_url && (
+                                {products.length === 0 && !store.cover_image_url && (!store.gallery_urls || store.gallery_urls.length === 0) && (
                                     <div className="text-center py-12">
                                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
                                             <svg className="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -342,7 +399,9 @@ const StoreView = ({ store, products, stories }: StoreViewProps) => {
                                 )}
                             </div>
                         </div>
-                    ) : (
+                    )}
+
+                    {activeTab === 'about' && (
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="lg:col-span-2">
                                 <StoreDetails store={store} />

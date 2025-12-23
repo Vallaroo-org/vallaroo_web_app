@@ -6,6 +6,7 @@ import { LanguageProvider } from "../context/LanguageContext";
 import { LocationProvider } from "../context/LocationContext";
 import { CartProvider } from "../context/CartContext";
 import { WishlistProvider } from "../context/WishlistContext";
+import ProfileCompletionCheck from "@/components/ProfileCompletionCheck";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,6 +44,7 @@ export default function RootLayout({
             <LocationProvider>
               <WishlistProvider>
                 <CartProvider>
+                  <ProfileCompletionCheck />
                   {children}
                 </CartProvider>
               </WishlistProvider>

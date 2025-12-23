@@ -26,6 +26,7 @@ interface GetShopsParams {
     page?: number;
     limit?: number;
     search?: string;
+    categoryId?: string;
     sortBy?: ShopSortOption;
 }
 
@@ -33,6 +34,7 @@ export async function getShops({
     page = 1,
     limit = 20,
     search = '',
+    categoryId = 'all',
     sortBy = 'newest',
 }: GetShopsParams = {}) {
     const from = (page - 1) * limit;
@@ -41,14 +43,23 @@ export async function getShops({
     // Select only columns that exist in the shops table
     let query = supabase
         .from('shops')
-        .select('id, name, name_ml, city, city_ml, cover_image_url, logo_url, phone_number, latitude, longitude, created_at')
+        .select('id, name, name_ml, city, city_ml, cover_image_url, logo_url, phone_number, latitude, longitude, created_at, category_id')
         .eq('is_hidden', false)
         .eq('is_verified', true);
+
+    // Category Filter
+    if (categoryId && categoryId !== 'all') {
+        query = query.eq('category_id', categoryId);
+    }
 
     // Search
     if (search) {
         query = query.or(`name.ilike.%${search}%,name_ml.ilike.%${search}%,city.ilike.%${search}%`);
     }
+
+    // Filter by type (if utilizing shop_type column 'product' | 'service' | 'both')
+    // Currently we don't have a frontend filter for this in getShops params, but good to have ready.
+    // If 'category' param is added later for 'Grocery' etc, we need that column.
 
     // Sort
     switch (sortBy) {

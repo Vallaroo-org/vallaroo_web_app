@@ -67,8 +67,11 @@ export default function AdBanner({ placement, className }: AdBannerProps) {
                     fill
                     className="object-cover transition-opacity duration-500"
                 />
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-                    <p className="text-white text-sm font-medium opacity-0 hover:opacity-100 transition-opacity">
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 md:p-6 flex flex-col justify-end">
+                    <h3 className="text-white text-lg md:text-xl font-bold line-clamp-2 drop-shadow-md mb-1">
+                        {activeAd.title}
+                    </h3>
+                    <p className="text-white/80 text-xs font-medium uppercase tracking-wider">
                         Sponsored
                     </p>
                 </div>

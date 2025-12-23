@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ShopList from '../components/ShopList';
 import GlobalProductList from '../components/GlobalProductList';
+import GlobalServiceList from '../components/GlobalServiceList';
 import FollowingStories from '../components/FollowingStories';
 import { MapPin, X, Navigation } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
@@ -12,7 +13,7 @@ import { useLocation } from '../context/LocationContext';
 import AdBanner from '../components/AdBanner';
 
 const DiscoverContent = () => {
-  const [activeTab, setActiveTab] = useState<'shops' | 'products'>('products');
+  const [activeTab, setActiveTab] = useState<'shops' | 'products' | 'services'>('products');
   const { placeName, requestLocation, setManualLocation, permissionStatus, isLoading: isLocationLoading } = useLocation();
   const { t } = useLanguage();
   const [showLocationModal, setShowLocationModal] = useState(false);
@@ -61,7 +62,7 @@ const DiscoverContent = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-4 mb-8 max-w-md">
+        <div className="flex gap-4 mb-8 max-w-lg">
           <button
             onClick={() => setActiveTab('products')}
             className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition-all duration-200 focus:outline-none focus:ring-2 ring-offset-2 ring-offset-background focus:ring-primary ${activeTab === 'products'
@@ -69,7 +70,16 @@ const DiscoverContent = () => {
               : 'text-muted-foreground hover:bg-background/50 hover:text-foreground hover:shadow-sm'
               }`}
           >
-            {t('products')}
+            {t('products') || 'Products'}
+          </button>
+          <button
+            onClick={() => setActiveTab('services')}
+            className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition-all duration-200 focus:outline-none focus:ring-2 ring-offset-2 ring-offset-background focus:ring-primary ${activeTab === 'services'
+              ? 'bg-background shadow-md text-foreground'
+              : 'text-muted-foreground hover:bg-background/50 hover:text-foreground hover:shadow-sm'
+              }`}
+          >
+            {t('services') || 'Services'}
           </button>
           <button
             onClick={() => setActiveTab('shops')}
@@ -92,6 +102,13 @@ const DiscoverContent = () => {
               <h2 className="text-2xl font-semibold tracking-tight">{t('nearbyShops')}</h2>
             </div>
             <ShopList />
+          </section>
+        ) : activeTab === 'services' ? (
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-semibold tracking-tight">{t('nearbyServices') || 'Nearby Services'}</h2>
+            </div>
+            <GlobalServiceList />
           </section>
         ) : (
           <section>

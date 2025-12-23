@@ -20,6 +20,8 @@ export default function StoryViewer({ stories, onClose }: StoryViewerProps) {
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const startTimeRef = useRef<number>(Date.now());
     const DURATION = 5000; // 5 seconds per story
+    // Track viewed stories in this session to prevent duplicates
+    const viewedStoriesRef = useRef<Set<string>>(new Set());
 
     const startTimer = () => {
         clearInterval(intervalRef.current!);
@@ -78,7 +80,14 @@ export default function StoryViewer({ stories, onClose }: StoryViewerProps) {
             const currentStory = stories[currentIndex];
             if (!currentStory) return;
 
+            // Client-side dedup: If already viewed in this session, skip.
+            if (viewedStoriesRef.current.has(currentStory.id)) {
+                console.log('StoryViewer: Already viewed story', currentStory.id);
+                return;
+            }
+
             console.log('StoryViewer: Recording view for story', currentStory.id);
+            viewedStoriesRef.current.add(currentStory.id);
 
             const { supabase } = await import('@/lib/supabaseClient');
             const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -87,29 +96,93 @@ export default function StoryViewer({ stories, onClose }: StoryViewerProps) {
 
             if (user) {
                 console.log('StoryViewer: User found', user.id);
-                try {
+            } else {
+                console.log('StoryViewer: Guest user');
+            }
+
+            try {
+                // Prepare payload - viewer_id is optional/nullable now
+                const payload: any = {
+                    story_id: currentStory.id,
+                    viewed_at: new Date().toISOString(),
+                };
+
+                if (user) {
+                    payload.viewer_id = user.id;
+
                     const { data, error } = await supabase
                         .from('story_views')
-                        .upsert({
-                            story_id: currentStory.id,
-                            viewer_id: user.id,
-                            viewed_at: new Date().toISOString()
-                        }, {
+                        .upsert(payload, {
                             onConflict: 'story_id, viewer_id'
                         })
                         .select()
                         .maybeSingle();
 
                     if (error) {
-                        console.error('StoryViewer: Upsert failed', error);
+                        // If FK violation (user profile missing), try to auto-heal by creating the profile
+                        if (error.code === '23503') {
+                            console.warn('StoryViewer: User profile missing for ID ' + user.id + ', attempting to auto-create profile...');
+
+                            // 1. Attempt to create the missing profile
+                            const { error: profileError } = await supabase
+                                .from('user_profiles')
+                                .insert({
+                                    id: user.id,
+                                    email: user.email,
+                                    // Add minimal required fields. 'updated_at' usually auto-handled or nullable.
+                                    created_at: new Date().toISOString(),
+                                });
+
+                            if (!profileError) {
+                                console.log('StoryViewer: Profile auto-created successfully. Retrying view record...');
+                                // 2. Retry the original upsert
+                                const { error: retryError } = await supabase
+                                    .from('story_views')
+                                    .upsert(payload, {
+                                        onConflict: 'story_id, viewer_id'
+                                    });
+
+                                if (retryError) {
+                                    console.error('StoryViewer: Retry failed after profile creation', retryError);
+                                } else {
+                                    console.log('StoryViewer: View recorded successfully after self-healing');
+                                }
+                            } else {
+                                console.error('StoryViewer: Failed to auto-create profile', profileError);
+                                // 3. Fallback to guest view if profile creation fails
+                                console.warn('StoryViewer: Falling back to guest view due to profile error');
+                                delete payload.viewer_id;
+                                const { error: fallbackError } = await supabase
+                                    .from('story_views')
+                                    .insert(payload);
+
+                                if (fallbackError) {
+                                    console.error('StoryViewer: Fallback guest insert failed', fallbackError);
+                                } else {
+                                    console.log('StoryViewer: Fallback guest view recorded');
+                                }
+                            }
+                        } else {
+                            console.error('StoryViewer: Upsert failed', JSON.stringify(error, null, 2), error.message, error.code, error.details);
+                        }
                     } else {
                         console.log('StoryViewer: View recorded successfully', data);
                     }
-                } catch (error) {
-                    console.error('StoryViewer: Exception recording view:', error);
+                } else {
+                    // Guest user: Just insert, do not select (as they have no read permission)
+                    const { error } = await supabase
+                        .from('story_views')
+                        .insert(payload);
+
+                    if (error) {
+                        console.error('StoryViewer: Guest insert failed', error);
+                    } else {
+                        console.log('StoryViewer: Guest view recorded');
+                    }
                 }
-            } else {
-                console.warn('StoryViewer: No user found, skipping view record.');
+
+            } catch (error) {
+                console.error('StoryViewer: Exception recording view:', error);
             }
         };
         recordView();

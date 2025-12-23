@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'oygtbslhjtjygghreevd.supabase.co',
       },
+      {
+        protocol: 'https',
+        hostname: 'vallaroo-storage.store',
+      },
     ],
   },
 };

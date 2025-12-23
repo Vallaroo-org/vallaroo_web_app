@@ -20,6 +20,7 @@ export interface Product {
     category: string | null;
     category_id?: string;
     global_category?: string;
+    global_category_id?: string;
     is_active?: boolean;
     created_at?: string;
     mrp?: number;
@@ -61,8 +62,8 @@ export async function getProducts({
 
     // Select fields - include shops join for global view
     const selectFields = shopId
-        ? 'id, name, name_ml, price, mrp, description, description_ml, image_urls, category_id, global_category, is_active, created_at'
-        : 'id, name, name_ml, price, mrp, description, description_ml, image_urls, category_id, global_category, is_active, created_at, shop_id, shops!inner (id, name, name_ml, phone_number, logo_url, is_verified, is_hidden, latitude, longitude)';
+        ? 'id, name, name_ml, price, mrp, description, description_ml, image_urls, category_id, global_category, global_category_id, is_active, created_at'
+        : 'id, name, name_ml, price, mrp, description, description_ml, image_urls, category_id, global_category, global_category_id, is_active, created_at, shop_id, shops!inner (id, name, name_ml, phone_number, logo_url, is_verified, is_hidden, latitude, longitude)';
 
     let query = supabase
         .from('products')
@@ -111,9 +112,21 @@ export async function getProducts({
         }
     }
 
-    // Global Category Filter
+    // Global Category Filter - Need to lookup category ID from product_categories table
     if (globalCategory && globalCategory !== 'all') {
-        query = query.eq('global_category', globalCategory);
+        // First, find the category ID by name
+        const { data: categoryData } = await supabase
+            .from('product_categories')
+            .select('id')
+            .ilike('name', globalCategory)
+            .single();
+
+        if (categoryData?.id) {
+            query = query.eq('global_category_id', categoryData.id);
+        } else {
+            // Fallback: try the old global_category string field
+            query = query.eq('global_category', globalCategory);
+        }
     }
 
     // Sort
