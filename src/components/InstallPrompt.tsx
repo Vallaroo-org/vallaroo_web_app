@@ -63,7 +63,7 @@ export default function InstallPrompt() {
                     <img
                         src="/v-icon.png"
                         alt="Vallaroo Logo"
-                        className="w-10 h-10 object-contain"
+                        className="w-10 h-10 object-contain invert dark:invert-0"
                     />
                 </div>
                 <div className="flex-1">
