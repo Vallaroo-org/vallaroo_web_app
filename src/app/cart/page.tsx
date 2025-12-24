@@ -109,6 +109,7 @@ const CartPage = () => {
                 .insert({
                     shop_id: shopId,
                     user_id: user.id,
+                    customer_id: user.id, // RLS Policy checks this field
                     customer_name: address.recipient_name || customerName, // Use recipient name if available
                     customer_phone: address.phone_number || customerPhone,
                     customer_address: customerAddress,
@@ -136,6 +137,21 @@ const CartPage = () => {
                 .insert(orderItems);
 
             if (itemsError) throw itemsError;
+
+            // 3.5. Deduct Stock (Using RPC to bypass RLS)
+            const stockUpdates = items.map(item =>
+                supabase.rpc('decrement_stock', {
+                    p_product_id: item.productId,
+                    p_quantity: item.quantity
+                })
+            );
+
+            // Execute all updates (we don't block order success on this, but we log errors)
+            Promise.all(stockUpdates).then(results => {
+                results.forEach(({ error }) => {
+                    if (error) console.error("Failed to deduct stock:", error);
+                });
+            });
 
             // 4. Construct WhatsApp Message
             const shopName = items[0].shopName;

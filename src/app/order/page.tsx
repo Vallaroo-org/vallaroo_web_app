@@ -3,6 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import Navbar from '@/components/Navbar';
 import OrderDetailsClient from '@/components/OrderDetailsClient';
+import { getBillId } from '@/app/actions/get-order';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 import { useSearchParams } from 'next/navigation';
@@ -21,13 +22,15 @@ function OrderContent() {
         }
     }, [orderId]);
 
+    const [billId, setBillId] = useState<string | null>(null);
+
     const fetchOrder = async (id: string) => {
         try {
             const { data, error } = await supabase
                 .from('orders')
                 .select(`
                     id, total_amount, customer_name, customer_phone, customer_address, created_at, status,
-                    shop:shops (name, logo_url, location_name, address),
+                    shop:shops (name, logo_url, address_line1, city),
                     order_items (
                         quantity,
                         total,
@@ -42,6 +45,19 @@ function OrderContent() {
             }
             if (data) {
                 setOrder(data);
+
+                // Fetch linked bill
+                // Try fetching via server action to bypass potential RLS issues for public links
+                try {
+                    console.log('Fetching bill ID for order:', id);
+                    const bid = await getBillId(id);
+                    console.log('Bill ID fetched:', bid);
+                    if (bid) {
+                        setBillId(bid);
+                    }
+                } catch (e) {
+                    console.error('Error fetching bill ID:', e);
+                }
             }
         } catch (err) {
             console.error(err);
@@ -85,7 +101,7 @@ function OrderContent() {
 
     return (
         <main className="flex-1">
-            <OrderDetailsClient order={order} />
+            <OrderDetailsClient order={order} billId={billId} />
         </main>
     );
 }

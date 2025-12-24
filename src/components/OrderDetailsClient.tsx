@@ -10,9 +10,10 @@ import { useLanguage } from '@/context/LanguageContext';
 
 interface OrderDetailsClientProps {
     order: OrderDetail;
+    billId?: string | null;
 }
 
-const OrderDetailsClient = ({ order }: OrderDetailsClientProps) => {
+const OrderDetailsClient = ({ order, billId }: OrderDetailsClientProps) => {
     const router = useRouter();
     const { t } = useLanguage();
     const [isCancelling, setIsCancelling] = useState(false);
@@ -100,14 +101,27 @@ const OrderDetailsClient = ({ order }: OrderDetailsClientProps) => {
                                 </p>
                                 <p className="text-xs opacity-75 mt-1">Order #{order.id.slice(0, 8)}</p>
                             </div>
-                            {order.status === 'pending' && (
-                                <button
-                                    onClick={() => setShowCancelDialog(true)}
-                                    className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-semibold transition-colors backdrop-blur-sm border border-white/10 shadow-lg"
-                                >
-                                    {t('cancelOrder')}
-                                </button>
-                            )}
+                            <div className="flex gap-2">
+                                {billId && (
+                                    <button
+                                        onClick={() => router.push(`/invoice/${billId}`)}
+                                        className="inline-flex items-center px-4 py-2 bg-white text-pink-600 hover:bg-gray-100 rounded-lg text-sm font-semibold transition-colors shadow-lg"
+                                    >
+                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                        </svg>
+                                        Download Invoice
+                                    </button>
+                                )}
+                                {order.status === 'pending' && (
+                                    <button
+                                        onClick={() => setShowCancelDialog(true)}
+                                        className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-semibold transition-colors backdrop-blur-sm border border-white/10 shadow-lg"
+                                    >
+                                        {t('cancelOrder')}
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
 

@@ -266,10 +266,11 @@ const ShopList = ({ initialShops = [] }: ShopListProps) => {
             {/* Category Filter Chips */}
             <div className="flex overflow-x-auto pb-4 gap-2 scrollbar-none mb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
                 <button
+                    type="button"
                     onClick={() => setSelectedCategory('all')}
-                    className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${selectedCategory === 'all'
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-background hover:bg-muted text-muted-foreground border-border'
+                    className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === 'all'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                         }`}
                 >
                     {t('all' as any) || 'All'}
@@ -277,10 +278,11 @@ const ShopList = ({ initialShops = [] }: ShopListProps) => {
                 {categories.map((cat) => (
                     <button
                         key={cat.id}
+                        type="button"
                         onClick={() => setSelectedCategory(cat.id)}
-                        className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${selectedCategory === cat.id
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'bg-background hover:bg-muted text-muted-foreground border-border'
+                        className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === cat.id
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                             }`}
                     >
                         {locale === 'ml' ? (cat.name_ml || cat.name) : cat.name}

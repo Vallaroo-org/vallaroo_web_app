@@ -37,7 +37,8 @@ export default function MyOrdersPage() {
 
     const fetchOrders = async (uid: string) => {
         setLoading(true);
-        const { data, error } = await supabase
+        // 1. Fetch Orders
+        const { data: ordersData, error: ordersError } = await supabase
             .from('orders')
             .select(`
         *,
@@ -51,13 +52,37 @@ export default function MyOrdersPage() {
             .eq('user_id', uid)
             .order('created_at', { ascending: false });
 
-        if (error) {
-            console.error('Error fetching orders:', error);
+        if (ordersError) {
+            console.error('Error fetching orders:', ordersError);
         }
-        if (data) {
-            console.log('Fetched orders:', data);
-            setOrders(data);
+
+        // 2. Fetch Bills for this user
+        // We now have user_id on bills table for linking.
+        let ordersWithBills = ordersData || [];
+
+        if (ordersData && ordersData.length > 0) {
+            const { data: billsData } = await supabase
+                .from('bills')
+                .select('id, metadata')
+                .eq('user_id', uid);
+
+            if (billsData && billsData.length > 0) {
+                const billMap = new Map();
+                billsData.forEach((bill: any) => {
+                    // Start by checking if bill is explicitly linked to order via metadata
+                    if (bill.metadata?.order_id) {
+                        billMap.set(bill.metadata.order_id, bill.id);
+                    }
+                });
+
+                ordersWithBills = ordersData.map(order => ({
+                    ...order,
+                    bill_id: billMap.get(order.id)
+                }));
+            }
         }
+
+        setOrders(ordersWithBills);
         setLoading(false);
     };
 
@@ -105,9 +130,10 @@ export default function MyOrdersPage() {
                                         <div className="text-right">
                                             <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${order.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
                                                 order.status === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                                                    'bg-muted text-muted-foreground'
+                                                    ['ready', 'accepted', 'out_for_delivery'].includes(order.status) ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                                                        'bg-muted text-muted-foreground'
                                                 }`}>
-                                                {t(order.status) || order.status.toUpperCase()}
+                                                {order.status === 'out_for_delivery' ? 'Ready' : (t(order.status) || order.status.toUpperCase())}
                                             </span>
                                         </div>
                                     </div>
@@ -134,6 +160,14 @@ export default function MyOrdersPage() {
                                                 <p className="text-xs text-muted-foreground">{t('totalAmount')}</p>
                                                 <p className="text-xl font-bold text-foreground">₹{order.total_amount}</p>
                                             </div>
+                                            {order.bill_id && (
+                                                <Link
+                                                    href={`/invoice/${order.bill_id}`}
+                                                    className="px-4 py-2 bg-green-50 text-green-600 rounded-lg text-sm font-semibold hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 mr-2"
+                                                >
+                                                    Invoice
+                                                </Link>
+                                            )}
                                             <Link
                                                 href={`/order?id=${order.id}`}
                                                 className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-semibold hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"

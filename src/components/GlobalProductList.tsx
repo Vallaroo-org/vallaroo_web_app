@@ -502,12 +502,13 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
                 </div>
 
                 {/* Global Categories Pills */}
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+                <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
                     <button
+                        type="button"
                         onClick={() => updateCategory('all')}
-                        className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${(selectedCategory === 'all')
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'bg-background hover:bg-muted text-muted-foreground border-border'
+                        className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${(decodeURIComponent(selectedCategory || '').toLowerCase() === 'all' || !selectedCategory)
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                             }`}
                     >
                         All
@@ -515,10 +516,11 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
                     {PRODUCT_CATEGORIES.map((cat) => (
                         <button
                             key={cat}
+                            type="button"
                             onClick={() => updateCategory(cat)}
-                            className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${(selectedCategory === cat)
-                                ? 'bg-primary text-primary-foreground border-primary'
-                                : 'bg-background hover:bg-muted text-muted-foreground border-border'
+                            className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${(decodeURIComponent(selectedCategory || '').toLowerCase() === cat.toLowerCase())
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                                 }`}
                         >
                             {cat}

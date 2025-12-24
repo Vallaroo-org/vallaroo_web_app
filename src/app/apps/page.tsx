@@ -131,9 +131,10 @@ const AppsPage = () => {
                                     </p>
                                     <div className="flex flex-col sm:flex-row gap-4">
                                         <Link
-                                            href="https://dihxruochfwayuwqhkiw.supabase.co/storage/v1/object/public/downloads/vallaroo-business-app.apk"
+                                            href="/vallaroo-business-app.apk"
                                             className="flex items-center gap-3 bg-foreground text-background px-6 py-3 rounded-xl hover:bg-foreground/90 transition-all shadow-lg"
                                             target="_blank"
+                                            download
                                         >
                                             <Smartphone className="w-6 h-6" />
                                             <div className="text-left">

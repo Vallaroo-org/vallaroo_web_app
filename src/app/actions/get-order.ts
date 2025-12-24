@@ -54,3 +54,21 @@ export async function getOrder(orderId: string): Promise<OrderDetail | null> {
 
     return data as unknown as OrderDetail;
 }
+
+export async function getBillId(orderId: string): Promise<string | null> {
+    const adminSupabase = createClient(
+        supabaseUrl,
+        process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey
+    );
+
+    const { data, error } = await adminSupabase
+        .from('bills')
+        .select('id')
+        .eq('metadata->>order_id', orderId)
+        .maybeSingle();
+
+    if (error) console.error('Error in getBillId:', error);
+    console.log('getBillId result for', orderId, ':', data);
+
+    return data?.id || null;
+}

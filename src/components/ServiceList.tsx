@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Filter, Share2, MessageCircle, Check, Loader2 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { getServices, type Service as ActionService, type SortOption } from '../app/actions/get-services';
-import { getServiceCategories, type ServiceCategory } from '../app/actions/get-service-categories';
+
 import Link from 'next/link';
 
 interface Service extends ActionService { }
@@ -145,18 +145,11 @@ function useDebounce<T>(value: T, delay: number): T {
 
 const ServiceList = ({ initialServices = [], shop }: ServiceListProps) => {
     const [services, setServices] = useState<Service[]>(initialServices || []);
-    const [categories, setCategories] = useState<ServiceCategory[]>([]);
-    const [selectedCategory, setSelectedCategory] = useState('all');
+
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState<SortOption>('newest');
 
-    useEffect(() => {
-        const fetchCategories = async () => {
-            const cats = await getServiceCategories();
-            setCategories(cats);
-        };
-        fetchCategories();
-    }, []);
+
 
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(false);
@@ -175,7 +168,6 @@ const ServiceList = ({ initialServices = [], shop }: ServiceListProps) => {
                 page: currentPage,
                 limit: 20,
                 search: debouncedSearch,
-                categoryId: selectedCategory,
                 sortBy: sortBy,
             });
 
@@ -197,16 +189,16 @@ const ServiceList = ({ initialServices = [], shop }: ServiceListProps) => {
         } finally {
             setLoading(false);
         }
-    }, [shop.id, page, debouncedSearch, sortBy, selectedCategory]);
+    }, [shop.id, page, debouncedSearch, sortBy]);
 
     useEffect(() => {
-        if (debouncedSearch === '' && sortBy === 'newest' && selectedCategory === 'all' && page === 1 && services === initialServices) {
+        if (debouncedSearch === '' && sortBy === 'newest' && page === 1 && services === initialServices) {
             if (initialServices.length > 0) setPage(2);
             return;
         }
         loadServices(true);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debouncedSearch, sortBy, selectedCategory]);
+    }, [debouncedSearch, sortBy]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -232,29 +224,7 @@ const ServiceList = ({ initialServices = [], shop }: ServiceListProps) => {
     return (
         <div>
             {/* Category Filter Chips */}
-            <div className="flex overflow-x-auto pb-4 gap-2 scrollbar-none mb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
-                <button
-                    onClick={() => setSelectedCategory('all')}
-                    className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === 'all'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                        }`}
-                >
-                    {t('all' as any) || 'All'}
-                </button>
-                {categories.map((cat) => (
-                    <button
-                        key={cat.id}
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === cat.id
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                            }`}
-                    >
-                        {locale === 'ml' ? (cat.name_ml || cat.name) : cat.name}
-                    </button>
-                ))}
-            </div>
+            {/* Header with Search and Sort */}
 
             <div className="flex flex-col sm:flex-row justify-between mb-6 gap-4 items-center">
                 <div className="relative w-full sm:w-48 order-2 sm:order-1">
