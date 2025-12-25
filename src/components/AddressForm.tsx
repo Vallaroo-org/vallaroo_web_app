@@ -116,7 +116,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, initialData }
         <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Label (e.g. Home, Work)</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">Label (e.g. Home, Work) <span className="text-red-500">*</span></label>
                     <input
                         type="text"
                         name="name"
@@ -127,7 +127,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, initialData }
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">{t('recipientName')}</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">{t('recipientName')} <span className="text-red-500">*</span></label>
                     <input
                         type="text"
                         name="recipient_name"
@@ -138,7 +138,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, initialData }
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">{t('phoneNumber')}</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">{t('phoneNumber')} <span className="text-red-500">*</span></label>
                     <input
                         type="tel"
                         name="phone_number"
@@ -149,18 +149,19 @@ export default function AddressForm({ userId, onSuccess, onCancel, initialData }
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">{t('pincode')}</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">{t('pincode')} <span className="text-red-500">*</span></label>
                     <input
                         type="text"
                         name="pincode"
                         value={formData.pincode}
                         onChange={handleChange}
                         className="w-full border border-input bg-background rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none text-foreground transition-all placeholder:text-muted-foreground"
+                        required
                     />
                 </div>
 
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-foreground mb-1">{t('address')}</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">{t('address')} <span className="text-red-500">*</span></label>
                     <input
                         type="text"
                         name="house_no"
@@ -168,6 +169,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, initialData }
                         value={formData.house_no}
                         onChange={handleChange}
                         className="w-full border border-input bg-background rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none text-foreground transition-all placeholder:text-muted-foreground mb-2"
+                        required
                     />
                     <input
                         type="text"
@@ -190,17 +192,18 @@ export default function AddressForm({ userId, onSuccess, onCancel, initialData }
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">{t('city')}</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">{t('city')} <span className="text-red-500">*</span></label>
                     <input
                         type="text"
                         name="city"
                         value={formData.city}
                         onChange={handleChange}
                         className="w-full border border-input bg-background rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none text-foreground transition-all placeholder:text-muted-foreground"
+                        required
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">{t('state')}</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">{t('state')} <span className="text-red-500">*</span></label>
                     <select
                         name="state"
                         value={formData.state}

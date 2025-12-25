@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, Mail, LockKeyhole, User } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import { parseError } from '@/lib/utils';
 
 export default function SignUpPage() {
     const router = useRouter();
@@ -100,7 +101,7 @@ export default function SignUpPage() {
                             {/* Email */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Email address
+                                    Email address <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -120,7 +121,7 @@ export default function SignUpPage() {
                             {/* Password */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Password
+                                    Password <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -146,7 +147,7 @@ export default function SignUpPage() {
                                                 Authentication Error
                                             </h3>
                                             <div className="mt-2 text-sm text-red-700 dark:text-red-300">
-                                                {error}
+                                                {parseError(error)}
                                             </div>
                                         </div>
                                     </div>

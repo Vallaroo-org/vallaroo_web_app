@@ -74,8 +74,15 @@
     color: hsl(var(--foreground));
   }
 
-  button, .cursor-pointer {
+  button:not(:disabled),
+  .cursor-pointer,
+  [role="button"]:not([aria-disabled="true"]) {
     cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
   }
 }
 
@@ -85,13 +92,15 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+  -webkit-tap-highlight-color: transparent;
+  /* Remove tap highlight on mobile */
 }
 
 @layer utilities {
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }
+
   .pt-safe {
     padding-top: env(safe-area-inset-top);
   }
@@ -143,6 +152,7 @@ body {
 
 /* Ensure buttons and interactive elements have proper touch targets on mobile */
 @media (max-width: 768px) {
+
   button,
   a,
   input[type="button"],

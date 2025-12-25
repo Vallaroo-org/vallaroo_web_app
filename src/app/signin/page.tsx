@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, Mail, LockKeyhole } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import { parseError } from '@/lib/utils';
 
 export default function SignInPage() {
     const router = useRouter();
@@ -73,7 +74,7 @@ export default function SignInPage() {
                             <div className="space-y-4">
                                 <div>
                                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 ml-1 mb-1">
-                                        Email address
+                                        Email address <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative group">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -93,9 +94,17 @@ export default function SignInPage() {
                                     </div>
                                 </div>
                                 <div>
-                                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 ml-1 mb-1">
-                                        Password
-                                    </label>
+                                    <div className="flex items-center justify-between ml-1 mb-1">
+                                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                                            Password <span className="text-red-500">*</span>
+                                        </label>
+                                        <Link
+                                            href="/forgot-password"
+                                            className="text-sm font-medium text-blue-600 hover:text-blue-500 hover:underline"
+                                        >
+                                            Forgot password?
+                                        </Link>
+                                    </div>
                                     <div className="relative group">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <LockKeyhole className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors duration-200" />
@@ -117,7 +126,7 @@ export default function SignInPage() {
 
                             {error && (
                                 <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600 text-center animate-in fade-in slide-in-from-top-1 border border-red-100 flex items-center justify-center gap-2">
-                                    <span className="font-medium">Error:</span> {error}
+                                    <span className="font-medium">Error:</span> {parseError(error)}
                                 </div>
                             )}
 

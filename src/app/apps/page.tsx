@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 import { Smartphone, ShoppingBag, Store, Star, Search, Bell } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -23,20 +24,29 @@ const AppsPage = () => {
                         <p className="text-muted-foreground mb-8">Experience the best of Vallaroo on your mobile device.</p>
 
                         {/* Tabs */}
-                        <div className="inline-flex p-1 bg-muted rounded-xl mx-auto mb-8">
+                        {/* Tabs */}
+                        <div className="inline-flex flex-wrap justify-center p-2 bg-black/40 backdrop-blur-md border border-white/10 rounded-full mx-auto mb-12 relative">
                             <button
+                                type="button"
                                 onClick={() => setActiveTab('customer')}
-                                className={`px-8 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'customer'
-                                    ? 'bg-background shadow-sm text-foreground'
-                                    : 'text-muted-foreground hover:text-foreground'}`}
+                                className={cn(
+                                    "px-10 py-3 rounded-full text-sm font-bold transition-all duration-300 min-w-[160px] relative z-10",
+                                    activeTab === 'customer'
+                                        ? "bg-white text-black shadow-[0_0_25px_rgba(255,255,255,0.4)] scale-105"
+                                        : "text-zinc-400 hover:text-white hover:bg-white/5"
+                                )}
                             >
                                 For Shoppers
                             </button>
                             <button
+                                type="button"
                                 onClick={() => setActiveTab('business')}
-                                className={`px-8 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'business'
-                                    ? 'bg-background shadow-sm text-foreground'
-                                    : 'text-muted-foreground hover:text-foreground'}`}
+                                className={cn(
+                                    "px-10 py-3 rounded-full text-sm font-bold transition-all duration-300 min-w-[160px] relative z-10",
+                                    activeTab === 'business'
+                                        ? "bg-white text-black shadow-[0_0_25px_rgba(255,255,255,0.4)] scale-105"
+                                        : "text-zinc-400 hover:text-white hover:bg-white/5"
+                                )}
                             >
                                 For Business
                             </button>
