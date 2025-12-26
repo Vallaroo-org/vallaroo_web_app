@@ -268,9 +268,9 @@ const ShopList = ({ initialShops = [] }: ShopListProps) => {
                 <button
                     type="button"
                     onClick={() => setSelectedCategory('all')}
-                    className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === 'all'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                    className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-semibold transition-all border ${selectedCategory === 'all'
+                        ? 'bg-black text-white dark:bg-white dark:text-black border-transparent shadow-sm'
+                        : 'bg-secondary/50 text-secondary-foreground border-transparent hover:bg-secondary hover:text-foreground'
                         }`}
                 >
                     {t('all' as any) || 'All'}
@@ -280,9 +280,9 @@ const ShopList = ({ initialShops = [] }: ShopListProps) => {
                         key={cat.id}
                         type="button"
                         onClick={() => setSelectedCategory(cat.id)}
-                        className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === cat.id
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                        className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-semibold transition-all border ${selectedCategory === cat.id
+                            ? 'bg-black text-white dark:bg-white dark:text-black border-transparent shadow-sm'
+                            : 'bg-secondary/50 text-secondary-foreground border-transparent hover:bg-secondary hover:text-foreground'
                             }`}
                     >
                         {locale === 'ml' ? (cat.name_ml || cat.name) : cat.name}

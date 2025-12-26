@@ -506,26 +506,29 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
                     <button
                         type="button"
                         onClick={() => updateCategory('all')}
-                        className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${(decodeURIComponent(selectedCategory || '').toLowerCase() === 'all' || !selectedCategory)
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                        className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-semibold transition-all border ${(decodeURIComponent(selectedCategory || '').replace(/\+/g, ' ').trim().toLowerCase() === 'all' || !selectedCategory)
+                            ? 'bg-black text-white dark:bg-white dark:text-black border-transparent shadow-sm'
+                            : 'bg-secondary/50 text-secondary-foreground border-transparent hover:bg-secondary hover:text-foreground'
                             }`}
                     >
                         All
                     </button>
-                    {PRODUCT_CATEGORIES.map((cat) => (
-                        <button
-                            key={cat}
-                            type="button"
-                            onClick={() => updateCategory(cat)}
-                            className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${(decodeURIComponent(selectedCategory || '').toLowerCase() === cat.toLowerCase())
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                                }`}
-                        >
-                            {cat}
-                        </button>
-                    ))}
+                    {PRODUCT_CATEGORIES.map((cat) => {
+                        const isSelected = decodeURIComponent(selectedCategory || '').replace(/\+/g, ' ').trim().toLowerCase() === cat.toLowerCase();
+                        return (
+                            <button
+                                key={cat}
+                                type="button"
+                                onClick={() => updateCategory(cat)}
+                                className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-semibold transition-all border ${isSelected
+                                    ? 'bg-black text-white dark:bg-white dark:text-black border-transparent shadow-sm'
+                                    : 'bg-secondary/50 text-secondary-foreground border-transparent hover:bg-secondary hover:text-foreground'
+                                    }`}
+                            >
+                                {cat}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 

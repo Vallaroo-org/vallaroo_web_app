@@ -17,7 +17,7 @@ export const en = {
   orderViaWhatsApp: "Order via WhatsApp",
   totalAmount: "Total Amount",
   cartEmpty: "Your cart is empty for this shop",
-  prodInfo: "Product Info",
+  prodInfo: "Shop Info",
   description: "Description",
   searchShops: "Search for shops...",
   kmAway: "{distance} km away",

@@ -2,13 +2,22 @@
 
 import { useState, useEffect } from "react";
 import { X, Download } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function InstallPrompt() {
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
     const [isVisible, setIsVisible] = useState(false);
     const [isIOS, setIsIOS] = useState(false);
+    const pathname = usePathname();
 
     useEffect(() => {
+        // Only show on home page
+        if (pathname !== "/") return;
+
+        // Check if previously dismissed
+        const isDismissed = localStorage.getItem("pwaPromptDismissed");
+        if (isDismissed) return;
+
         // Check if it's iOS
         const userAgent = window.navigator.userAgent.toLowerCase();
         const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
@@ -30,7 +39,7 @@ export default function InstallPrompt() {
         return () => {
             window.removeEventListener("beforeinstallprompt", handler);
         };
-    }, []);
+    }, [pathname]);
 
     const handleInstallClick = async () => {
         if (!deferredPrompt) return;
@@ -41,20 +50,20 @@ export default function InstallPrompt() {
         if (outcome === "accepted") {
             setDeferredPrompt(null);
             setIsVisible(false);
+            localStorage.setItem("pwaPromptDismissed", "true");
         }
     };
 
     const handleDismiss = () => {
         setIsVisible(false);
+        localStorage.setItem("pwaPromptDismissed", "true");
     };
 
     if (!isVisible && !isIOS) return null;
-    // Ideally for iOS we would show conditional instructions, but for now we follow the "install app" flow for Android/Desktop PWA
-    // Note: iOS doesn't support 'beforeinstallprompt' yet, so this specific prompt is mostly for Android/Desktop. 
-    // We can add a manual "Add to Home Screen" callout for iOS if requested, but the prompt specifically requested "dialog or popup for install".
-    // For this iteration, I'll focus on the standard PWA prompt which works on Android/Desktop Chrome/Edge.
-
     if (!isVisible) return null;
+
+    // Double check pathname rendering to be safe
+    if (pathname !== "/") return null;
 
     return (
         <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-2xl p-4 z-50 animate-in slide-in-from-bottom-5 duration-500">

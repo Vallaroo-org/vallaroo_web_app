@@ -366,14 +366,7 @@ const StoreView = ({ store, products, services = [], stories }: StoreViewProps) 
                             <h2 className="text-2xl font-bold mb-6 tracking-tight">{t('gallery')}</h2>
                             <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                    {/* Cover Image */}
-                                    {store.cover_image_url && (
-                                        <div className="aspect-square relative rounded-xl overflow-hidden group cursor-pointer shadow-sm hover:shadow-md transition-all">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={store.cover_image_url} alt="Shop Cover" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
-                                        </div>
-                                    )}
+
 
                                     {/* Shop Gallery Images */}
                                     {store.gallery_urls?.map((url: string, index: number) => (
@@ -384,18 +377,9 @@ const StoreView = ({ store, products, services = [], stories }: StoreViewProps) 
                                         </div>
                                     ))}
 
-                                    {/* Product Images as Gallery (Fallback/Addition) */}
-                                    {products.slice(0, 11).map((product) => (
-                                        product.image_urls?.[0] && (
-                                            <div key={product.id} className="aspect-square relative rounded-xl overflow-hidden group cursor-pointer shadow-sm hover:shadow-md transition-all">
-                                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img src={product.image_urls[0]} alt={getLocalizedContent(product, 'name')} className="w-full h-full object-cover transition-transform duration-500 md:group-hover:scale-110" />
-                                                <div className="absolute inset-0 bg-black/0 md:group-hover:bg-black/10 transition-colors"></div>
-                                            </div>
-                                        )
-                                    ))}
+
                                 </div>
-                                {products.length === 0 && !store.cover_image_url && (!store.gallery_urls || store.gallery_urls.length === 0) && (
+                                {(!store.gallery_urls || store.gallery_urls.length === 0) && (
                                     <div className="text-center py-12">
                                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
                                             <svg className="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
