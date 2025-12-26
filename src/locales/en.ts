@@ -165,4 +165,9 @@ export const en = {
   itemsLabel: "Items",
   customerDetailsLabel: "Customer Details",
   viewOrderLink: "View Order: {link}",
+  hoursLabel: "Operating Hours",
+  servicesLabel: "Services",
+  deliveryAvailable: "Delivery Available",
+  takeawayAvailable: "Takeaway / Booking",
+  temporarilyClosed: "Temporarily Closed",
 };
