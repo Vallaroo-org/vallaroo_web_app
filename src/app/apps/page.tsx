@@ -30,7 +30,7 @@ const AppsPage = () => {
                                 type="button"
                                 onClick={() => setActiveTab('customer')}
                                 className={cn(
-                                    "px-10 py-3 rounded-full text-sm font-bold transition-all duration-300 min-w-[160px] relative z-10",
+                                    "px-6 sm:px-10 py-3 rounded-full text-xs sm:text-sm font-bold transition-all duration-300 min-w-[120px] sm:min-w-[160px] relative z-10",
                                     activeTab === 'customer'
                                         ? "bg-white text-black shadow-[0_0_25px_rgba(255,255,255,0.4)] scale-105"
                                         : "text-zinc-400 hover:text-white hover:bg-white/5"
@@ -42,7 +42,7 @@ const AppsPage = () => {
                                 type="button"
                                 onClick={() => setActiveTab('business')}
                                 className={cn(
-                                    "px-10 py-3 rounded-full text-sm font-bold transition-all duration-300 min-w-[160px] relative z-10",
+                                    "px-6 sm:px-10 py-3 rounded-full text-xs sm:text-sm font-bold transition-all duration-300 min-w-[120px] sm:min-w-[160px] relative z-10",
                                     activeTab === 'business'
                                         ? "bg-white text-black shadow-[0_0_25px_rgba(255,255,255,0.4)] scale-105"
                                         : "text-zinc-400 hover:text-white hover:bg-white/5"

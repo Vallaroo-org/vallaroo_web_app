@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Filter, Share2, MessageCircle, ShoppingCart, Check, Loader2, Heart } from 'lucide-react';
+import { Search, Filter, Share2, MessageCircle, ShoppingCart, Check, Loader2, Heart, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -185,7 +185,7 @@ const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
         </div>
       </div>
 
-      <div className="p-4 flex flex-col flex-1">
+      <div className="p-3 sm:p-4 flex flex-col flex-1">
         <div className="flex-1 mb-3">
           <h3 className="font-semibold text-lg leading-tight line-clamp-2 capitalize group-hover:text-primary transition-colors min-h-[3rem] tracking-tight">{productName}</h3>
 
@@ -208,29 +208,32 @@ const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
           </div>
         </div>
 
-        <div className="mt-auto grid grid-cols-5 gap-3 w-full pt-4 border-t border-border/40">
+        <div className="mt-auto flex flex-col gap-2 w-full pt-3 sm:pt-4 border-t border-border/40">
           <button
             onClick={handleAddToCart}
-            className={`col-span-3 px-3 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 font-medium text-sm shadow-sm active:scale-95 ${isAdded
+            className={`w-full px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all flex items-center justify-center gap-1.5 font-medium text-xs sm:text-sm shadow-sm active:scale-95 ${isAdded
               ? 'bg-green-600 text-white shadow-green-200'
               : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-lg'
               }`}
           >
-            {isAdded ? <Check className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
+            {isAdded ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
             <span className="truncate">{t('addToCart') || 'Add'}</span>
           </button>
 
-          <button
-            onClick={handleInquire}
-            disabled={!hasWhatsapp}
-            className={`col-span-2 px-3 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 font-medium text-sm border ${hasWhatsapp
-              ? 'bg-secondary text-secondary-foreground hover:bg-secondary/80 border-border/50 hover:border-primary/20'
-              : 'bg-muted text-muted-foreground opacity-50 cursor-not-allowed'
-              }`}
-            title="WhatsApp Inquiry"
-          >
-            <MessageCircle className="w-4 h-4" />
-          </button>
+          {hasWhatsapp && (
+            <button
+              onClick={handleInquire}
+              disabled={!hasWhatsapp}
+              className={`w-full px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all flex items-center justify-center gap-1.5 font-medium text-xs sm:text-sm border ${hasWhatsapp
+                ? 'bg-secondary text-secondary-foreground hover:bg-secondary/80 border-border/50 hover:border-primary/20'
+                : 'bg-muted text-muted-foreground opacity-50 cursor-not-allowed'
+                }`}
+              title="WhatsApp Inquiry"
+            >
+              <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="truncate text-xs">Inquire</span>
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -385,16 +388,26 @@ const ProductList = ({ initialProducts = [], shop }: ProductListProps) => {
           <input
             type="text"
             placeholder={t('searchExample')}
-            className="w-full pl-9 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
+            className="w-full pl-9 pr-8 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            maxLength={50}
           />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => setSearchTerm('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted transition-colors text-muted-foreground"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
       {products.length > 0 ? (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-6">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} shop={shop} />
             ))}

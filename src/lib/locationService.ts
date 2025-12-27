@@ -10,73 +10,118 @@ interface LocationShop {
     longitude?: number;
 }
 
+// Simple in-memory cache: key = `${shopId}_${startLat}_${startLng}`, value = distance string
+const distanceCache = new Map<string, string>();
+
+// Request queue to serialize API calls
+const requestQueue: (() => Promise<void>)[] = [];
+let isProcessingQueue = false;
+
+const processQueue = async () => {
+    if (isProcessingQueue) return;
+    isProcessingQueue = true;
+
+    while (requestQueue.length > 0) {
+        const task = requestQueue.shift();
+        if (task) {
+            try {
+                await task();
+            } catch (err) {
+                console.error("Error processing location task:", err);
+            }
+        }
+        // Wait 1 second between requests to respect OSRM demo server rate limits
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    isProcessingQueue = false;
+};
+
 export const getDrivingDistances = async (
     startLat: number,
     startLng: number,
     shops: LocationShop[]
 ): Promise<DistanceResult> => {
+    // 1. Check Cache first
     const results: DistanceResult = {};
+    const shopsToFetch: LocationShop[] = [];
 
-    // Filter valid shops with coordinates
-    const validShops = shops.filter(
-        (s) => s.latitude != null && s.longitude != null
-    );
-
-    if (validShops.length === 0) return results;
-
-    // Batch requests to respect URL limits (max ~50-80 usually safe, let's use 50)
-    const BATCH_SIZE = 50;
-
-    for (let i = 0; i < validShops.length; i += BATCH_SIZE) {
-        const batch = validShops.slice(i, i + BATCH_SIZE);
-
-        try {
-            // Construct coordinates string: start;shop1;shop2...
-            // OSRM expects: longitude,latitude
-            const coords = [`${startLng},${startLat}`];
-
-            batch.forEach(shop => {
-                coords.push(`${shop.longitude},${shop.latitude}`);
-            });
-
-            const coordsString = coords.join(';');
-
-            // sources=0 means calculate matrix from the first coordinate (start) to all others
-            // annotations=distance returns the distance matrix
-            const url = `${OSRM_API_BASE}/${coordsString}?sources=0&annotations=distance`;
-
-            const response = await fetch(url);
-
-            if (!response.ok) {
-                console.error(`OSRM API error: ${response.status}`);
-                continue;
-            }
-
-            const data = await response.json();
-
-            if (data.code === 'Ok' && data.distances && data.distances[0]) {
-                // data.distances[0] is the array of distances from the source (index 0) to all destinations
-                // Index 0 in the result array is source->source (0)
-                // Index 1 corresponds to batch[0], Index 2 to batch[1], etc.
-                const distanceArray = data.distances[0];
-
-                batch.forEach((shop, index) => {
-                    // The distance in the response array corresponds to index + 1
-                    const distanceMeters = distanceArray[index + 1];
-
-                    if (distanceMeters !== null && distanceMeters !== undefined) {
-                        // Convert to KM and format
-                        const distanceKm = (distanceMeters / 1000).toFixed(1);
-                        results[shop.id] = distanceKm;
-                    }
-                });
-            }
-        } catch (error) {
-            console.error('Error fetching driving distances:', error);
+    shops.forEach(shop => {
+        const key = `${shop.id}_${startLat}_${startLng}`;
+        if (distanceCache.has(key)) {
+            results[shop.id] = distanceCache.get(key)!;
+        } else if (shop.latitude != null && shop.longitude != null) {
+            shopsToFetch.push(shop);
         }
+    });
+
+    if (shopsToFetch.length === 0) {
+        return results;
     }
 
-    return results;
+    // 2. Queue the fetch for remaining shops
+    return new Promise<DistanceResult>((resolve) => {
+        requestQueue.push(async () => {
+            const BATCH_SIZE = 25; // Reduce batch size slightly to be safe
+
+            for (let i = 0; i < shopsToFetch.length; i += BATCH_SIZE) {
+                const batch = shopsToFetch.slice(i, i + BATCH_SIZE);
+
+                try {
+                    const coords = [`${startLng},${startLat}`];
+                    batch.forEach(shop => {
+                        coords.push(`${shop.longitude},${shop.latitude}`);
+                    });
+
+                    const coordsString = coords.join(';');
+                    const url = `${OSRM_API_BASE}/${coordsString}?sources=0&annotations=distance`;
+
+                    const response = await fetch(url);
+
+                    if (response.status === 429) {
+                        console.warn("OSRM Rate Limit hit, waiting longer...");
+                        await new Promise(r => setTimeout(r, 2000));
+                        // Ideally strictly retry, but for simplicity we skip this batch to avoid infinite loops 
+                        // or complex retry logic in this simple queue.
+                        // A better approach would be to unshift this task back? 
+                        // For now, let's just log and continue. Use cache next time.
+                        continue;
+                    }
+
+                    if (!response.ok) {
+                        console.error(`OSRM API error: ${response.status}`);
+                        continue;
+                    }
+
+                    const data = await response.json();
+
+                    if (data.code === 'Ok' && data.distances && data.distances[0]) {
+                        const distanceArray = data.distances[0];
+                        batch.forEach((shop, index) => {
+                            const distanceMeters = distanceArray[index + 1];
+                            if (distanceMeters !== null && distanceMeters !== undefined) {
+                                const distanceKm = (distanceMeters / 1000).toFixed(1);
+                                results[shop.id] = distanceKm;
+                                // Update Cache
+                                distanceCache.set(`${shop.id}_${startLat}_${startLng}`, distanceKm);
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error in batched distance fetch:', error);
+                }
+
+                // Small delay between batches even within the same task
+                if (i + BATCH_SIZE < shopsToFetch.length) {
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            }
+
+            resolve(results);
+        });
+
+        processQueue();
+    });
 };
 
 export const getPlaceName = async (lat: number, lng: number): Promise<string | null> => {

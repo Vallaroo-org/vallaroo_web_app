@@ -215,7 +215,7 @@ const StoreView = ({ store, products, services = [], stories }: StoreViewProps) 
                 <div className="bg-background/80 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-4 sm:p-6 flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6 text-center sm:text-left">
                     {/* Logo - Centered on mobile, absolute overlap adjusted */}
                     <div
-                        className={`w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-background bg-card shadow-md overflow-hidden flex-shrink-0 -mt-16 sm:mt-0 relative z-10 ${stories.length > 0 ? 'cursor-pointer p-1 border-transparent bg-gradient-to-tr from-purple-500 to-orange-500' : ''}`}
+                        className={`w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-background bg-white dark:bg-gray-800 shadow-md overflow-hidden flex-shrink-0 -mt-16 sm:mt-0 relative z-10 ${stories.length > 0 ? 'cursor-pointer p-1 border-transparent bg-gradient-to-tr from-purple-500 to-orange-500' : ''}`}
                         onClick={() => stories.length > 0 && setShowStories(true)}
                     >
                         <div className={`w-full h-full rounded-full overflow-hidden ${stories.length > 0 ? 'border-2 border-background' : ''}`}>
@@ -227,7 +227,7 @@ const StoreView = ({ store, products, services = [], stories }: StoreViewProps) 
                                     className="w-full h-full object-cover"
                                 />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground text-3xl font-bold">
+                                <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-muted-foreground text-3xl font-bold">
                                     {shopName.charAt(0).toUpperCase()}
                                 </div>
                             )}

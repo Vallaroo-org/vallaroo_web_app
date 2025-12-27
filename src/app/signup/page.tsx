@@ -4,23 +4,49 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2, Mail, LockKeyhole, User } from 'lucide-react';
+import { Loader2, Mail, LockKeyhole, User, Eye, EyeOff } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { parseError } from '@/lib/utils';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function SignUpPage() {
     const router = useRouter();
+    const { t } = useLanguage();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [fullName, setFullName] = useState('');
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [authError, setAuthError] = useState<string | null>(null);
+
+    const validateForm = () => {
+        const newErrors: Record<string, string> = {};
+        if (!fullName.trim()) {
+            newErrors.fullName = t.errorNameRequired;
+        }
+        if (!email.trim()) {
+            newErrors.email = t.errorEmailRequired;
+        }
+        if (!password) {
+            newErrors.password = t.errorPasswordRequired;
+        } else if (password.length < 6) {
+            newErrors.password = t.errorPasswordLength;
+        }
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setError(null);
+        setAuthError(null);
+
+        if (!validateForm()) {
+            setLoading(false);
+            return;
+        }
 
         const { error } = await supabase.auth.signUp({
             email,
@@ -33,7 +59,7 @@ export default function SignUpPage() {
         });
 
         if (error) {
-            setError(error.message);
+            setAuthError(error.message);
             setLoading(false);
         } else {
             setSuccess(true);
@@ -43,7 +69,7 @@ export default function SignUpPage() {
 
     const handleGoogleSignIn = async () => {
         setLoading(true);
-        setError(null);
+        setAuthError(null);
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
@@ -52,7 +78,7 @@ export default function SignUpPage() {
         });
 
         if (error) {
-            setError(error.message);
+            setAuthError(error.message);
             setLoading(false);
         }
     };
@@ -66,16 +92,17 @@ export default function SignUpPage() {
                         <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 dark:bg-green-900 mb-6">
                             <Mail className="h-8 w-8 text-green-600 dark:text-green-300" />
                         </div>
-                        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Verify your account</h2>
+                        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{t.verifyTitle}</h2>
                         <p className="text-gray-600 dark:text-gray-300 mb-8">
-                            We have sent a verification email to <span className="font-semibold text-gray-900 dark:text-white">{email}</span>.
-                            Please check your inbox and click the link to activate your account.
+                            {t.verifySubtitle} <span className="font-semibold text-gray-900 dark:text-white">{email}</span>.
+                            <br />
+                            {t.verifyInstruction}
                         </p>
                         <Link
                             href="/signin"
                             className="inline-flex w-full justify-center rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors"
                         >
-                            Back to Login
+                            {t.backToLogin}
                         </Link>
                     </div>
                 </div>
@@ -91,55 +118,106 @@ export default function SignUpPage() {
                 <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
                     <div className="px-8 py-10">
                         <div className="text-center mb-8">
-                            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Create Account</h2>
+                            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{t.signUpTitle}</h2>
                             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                Join Vallaroo today
+                                {t.signUpSubtitle}
                             </p>
                         </div>
 
                         <form onSubmit={handleSignUp} className="space-y-6">
-                            {/* Email */}
+                            {/* Full Name */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Email address <span className="text-red-500">*</span>
+                                    {t.fullNameLabel} <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Mail className="h-5 w-5 text-gray-400" />
+                                        <User className={`h-5 w-5 ${errors.fullName ? 'text-red-500' : 'text-gray-400'}`} />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={fullName}
+                                        onChange={(e) => {
+                                            setFullName(e.target.value);
+                                            if (errors.fullName) setErrors({ ...errors, fullName: '' });
+                                        }}
+                                        className={`block w-full pl-10 pr-3 py-3 border ${errors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 transition-colors`}
+                                        placeholder="John Doe"
+                                    />
+                                </div>
+                                {errors.fullName && (
+                                    <p className="mt-1 text-sm text-red-500 animate-in slide-in-from-top-1 px-1">
+                                        {errors.fullName}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Email */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    {t.emailAddressLabel} <span className="text-red-500">*</span>
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Mail className={`h-5 w-5 ${errors.email ? 'text-red-500' : 'text-gray-400'}`} />
                                     </div>
                                     <input
                                         type="email"
-                                        required
                                         value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 transition-colors"
+                                        onChange={(e) => {
+                                            setEmail(e.target.value);
+                                            if (errors.email) setErrors({ ...errors, email: '' });
+                                        }}
+                                        className={`block w-full pl-10 pr-3 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 transition-colors`}
                                         placeholder="you@example.com"
                                     />
                                 </div>
+                                {errors.email && (
+                                    <p className="mt-1 text-sm text-red-500 animate-in slide-in-from-top-1 px-1">
+                                        {errors.email}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Password */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Password <span className="text-red-500">*</span>
+                                    {t.passwordLabel} <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <LockKeyhole className="h-5 w-5 text-gray-400" />
+                                        <LockKeyhole className={`h-5 w-5 ${errors.password ? 'text-red-500' : 'text-gray-400'}`} />
                                     </div>
                                     <input
-                                        type="password"
-                                        required
+                                        type={showPassword ? 'text' : 'password'}
                                         value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 transition-colors"
+                                        onChange={(e) => {
+                                            setPassword(e.target.value);
+                                            if (errors.password) setErrors({ ...errors, password: '' });
+                                        }}
+                                        className={`block w-full pl-10 pr-10 py-3 border ${errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 transition-colors`}
                                         placeholder="••••••••"
-                                        minLength={6}
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff className="h-5 w-5" />
+                                        ) : (
+                                            <Eye className="h-5 w-5" />
+                                        )}
+                                    </button>
                                 </div>
+                                {errors.password && (
+                                    <p className="mt-1 text-sm text-red-500 animate-in slide-in-from-top-1 px-1">
+                                        {errors.password}
+                                    </p>
+                                )}
                             </div>
 
-                            {error && (
+                            {authError && (
                                 <div className="rounded-lg bg-red-50 dark:bg-red-900/30 p-4">
                                     <div className="flex">
                                         <div className="ml-3">
@@ -147,7 +225,7 @@ export default function SignUpPage() {
                                                 Authentication Error
                                             </h3>
                                             <div className="mt-2 text-sm text-red-700 dark:text-red-300">
-                                                {parseError(error)}
+                                                {parseError(authError)}
                                             </div>
                                         </div>
                                     </div>
@@ -163,7 +241,7 @@ export default function SignUpPage() {
                                     {loading ? (
                                         <Loader2 className="h-5 w-5 animate-spin" />
                                     ) : (
-                                        'Create Account'
+                                        t.signUpButton
                                     )}
                                 </button>
                             </div>
@@ -173,7 +251,7 @@ export default function SignUpPage() {
                                     <div className="w-full border-t border-gray-300 dark:border-gray-600" />
                                 </div>
                                 <div className="relative flex justify-center text-sm">
-                                    <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">Or continue with</span>
+                                    <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">{t.orContinueWith}</span>
                                 </div>
                             </div>
 
@@ -209,9 +287,9 @@ export default function SignUpPage() {
 
                         <div className="mt-6 text-center">
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Already have an account?{' '}
+                                {t.alreadyHaveAccount}{' '}
                                 <Link href="/signin" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
-                                    Sign in
+                                    {t.signInLink}
                                 </Link>
                             </p>
                         </div>

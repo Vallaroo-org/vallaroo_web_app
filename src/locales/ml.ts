@@ -165,4 +165,36 @@ export const ml = {
     itemsLabel: "സാധനങ്ങൾ",
     customerDetailsLabel: "ഉപഭോക്താവിന്റെ വിവരങ്ങൾ",
     viewOrderLink: "ഓർഡർ കാണുക: {link}",
+
+    // Auth
+    signInTitle: "സ്വാഗതം",
+    signInSubtitle: "തുടരാൻ ലോഗിൻ ചെയ്യുക",
+    emailAddressLabel: "ഇമെയിൽ വിലാസം",
+    fullNameLabel: "പൂർണ്ണ പേര്",
+    passwordLabel: "പാസ്വേഡ്",
+    rememberMe: "എന്നെ ഓർമിക്കുക",
+    forgotPassword: "പാസ്വേഡ് മറന്നോ?",
+    signInButton: "ലോഗിൻ",
+    orContinueWith: "അല്ലെങ്കിൽ ഉപയോഗിക്കുക",
+    dontHaveAccount: "അക്കൗണ്ട് ഇല്ലേ?",
+    signUpLink: "അക്കൗണ്ട് ഉണ്ടാക്കുക",
+    signUpTitle: "അക്കൗണ്ട് ഉണ്ടാക്കുക",
+    signUpSubtitle: "വല്ലാറൂവിൽ ചേരുക",
+    fullNameLabel: "പൂർണ്ണ പേര്",
+    confirmPasswordLabel: "പാസ്വേഡ് സ്ഥിരീകരിക്കുക",
+    signUpButton: "രജിസ്റ്റർ ചെയ്യുക",
+    alreadyHaveAccount: "അക്കൗണ്ട് ഉണ്ടോ?",
+    signInLink: "ലോഗിൻ",
+
+    // Validation
+    errorEmailRequired: "ഇമെയിൽ വിലാസം ആവശ്യമാണ്",
+    errorPasswordRequired: "പാസ്വേഡ് ആവശ്യമാണ്",
+    errorPasswordLength: "പാസ്വേഡിൽ കുറഞ്ഞത് 6 അക്ഷരങ്ങളെങ്കിലും ഉണ്ടായിരിക്കണം",
+    errorNameRequired: "പൂർണ്ണ പേര് ആവശ്യമാണ്",
+
+    // Verify
+    verifyTitle: "നിങ്ങളുടെ അക്കൗണ്ട് പരിശോധിച്ചുറപ്പിക്കുക",
+    verifySubtitle: "ഞങ്ങൾ ഒരു പരിശോധനാ ഇമെയിൽ അയച്ചിട്ടുണ്ട്",
+    verifyInstruction: "ദയവായി നിങ്ങളുടെ ഇൻബോക്സ് പരിശോധിച്ച് അക്കൗണ്ട് സജീവമാക്കാൻ ലിങ്കിൽ ക്ലിക്കുചെയ്യുക.",
+    backToLogin: "ലോഗിനിലേക്ക് മടങ്ങുക",
 };

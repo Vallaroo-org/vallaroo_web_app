@@ -144,12 +144,14 @@ export default function ProfilePage() {
         document.getElementById('avatar-upload')?.click();
     };
 
+    const [uploading, setUploading] = useState(false);
+
     const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         if (!event.target.files || event.target.files.length === 0) return;
 
         const file = event.target.files[0];
 
-        setLoading(true);
+        setUploading(true);
         try {
             // Upload to R2
             const { publicUrl } = await uploadToR2(file, `avatars/${user.id}`);
@@ -171,7 +173,7 @@ export default function ProfilePage() {
             console.error('Error uploading avatar:', error);
             toast.error('Failed to update profile picture');
         } finally {
-            setLoading(false);
+            setUploading(false);
         }
     };
 
@@ -210,9 +212,15 @@ export default function ProfilePage() {
                             {/* Avatar */}
                             <div className="relative group">
                                 <div
-                                    className="w-24 h-24 bg-background rounded-full border-4 border-card flex items-center justify-center overflow-hidden cursor-pointer"
+                                    className="w-24 h-24 bg-background rounded-full border-4 border-card flex items-center justify-center overflow-hidden cursor-pointer relative"
                                     onClick={handleAvatarClick}
                                 >
+                                    {uploading ? (
+                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+                                            <Loader2 className="w-8 h-8 text-white animate-spin" />
+                                        </div>
+                                    ) : null}
+
                                     {profile?.profile_image_url ? (
                                         // eslint-disable-next-line @next/next/no-img-element
                                         <img src={profile.profile_image_url} alt="Profile" className="w-full h-full object-cover" />
@@ -234,6 +242,7 @@ export default function ProfilePage() {
                                     className="hidden"
                                     accept="image/*"
                                     onChange={handleAvatarChange}
+                                    disabled={uploading}
                                 />
                             </div>
 

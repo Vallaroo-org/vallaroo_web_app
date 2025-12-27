@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Filter, Share2, MessageCircle, Check, Loader2 } from 'lucide-react';
+import { Search, Filter, Share2, MessageCircle, Check, Loader2, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { getServices, type Service as ActionService, type SortOption } from '../app/actions/get-services';
 
@@ -248,10 +248,20 @@ const ServiceList = ({ initialServices = [], shop }: ServiceListProps) => {
                     <input
                         type="text"
                         placeholder={t('searchServices') || 'Search services...'}
-                        className="w-full pl-9 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
+                        className="w-full pl-9 pr-8 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
+                        maxLength={50}
                     />
+                    {searchTerm && (
+                        <button
+                            type="button"
+                            onClick={() => setSearchTerm('')}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted transition-colors text-muted-foreground"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    )}
                 </div>
             </div>
 

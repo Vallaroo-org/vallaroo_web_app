@@ -7,7 +7,7 @@ import { useEffect, useState, useRef, Suspense } from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useLanguage } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
-import { ShoppingCart, User, LogIn, MapPin, Heart, Search } from 'lucide-react';
+import { ShoppingCart, User, LogIn, MapPin, Heart, Search, X } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useLocation } from '../context/LocationContext';
 import LocationDialog from './LocationDialog';
@@ -74,10 +74,25 @@ const SearchBar = ({ className }: { className?: string }) => {
       <input
         type="text"
         placeholder={t('searchExample') || "Search for products..."}
-        className="w-full pl-4 pr-10 py-2 rounded-full border border-border bg-muted/50 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+        className="w-full pl-4 pr-16 py-2 rounded-full border border-border bg-muted/50 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all outline-none"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        maxLength={50}
       />
+      {query && (
+        <button
+          type="button"
+          onClick={() => {
+            setQuery('');
+            const params = new URLSearchParams(searchParams.toString());
+            params.delete('search');
+            router.push(`/?${params.toString()}`);
+          }}
+          className="absolute right-9 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted transition-colors text-muted-foreground"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
       <button
         type="submit"
         className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-primary hover:text-white transition-colors text-muted-foreground"

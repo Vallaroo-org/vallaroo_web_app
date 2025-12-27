@@ -170,4 +170,36 @@ export const en = {
   deliveryAvailable: "Delivery Available",
   takeawayAvailable: "Takeaway / Booking",
   temporarilyClosed: "Temporarily Closed",
+
+  // Auth
+  signInTitle: "Welcome Back",
+  signInSubtitle: "Sign in to continue to your dashboard",
+  emailAddressLabel: "Email address",
+  fullNameLabel: "Full Name",
+  passwordLabel: "Password",
+  rememberMe: "Remember me",
+  forgotPassword: "Forgot your password?",
+  signInButton: "Sign in",
+  orContinueWith: "Or continue with",
+  dontHaveAccount: "Don't have an account?",
+  signUpLink: "Sign up",
+  signUpTitle: "Create an Account",
+  signUpSubtitle: "Join Vallaroo today",
+  fullNameLabel: "Full Name",
+  confirmPasswordLabel: "Confirm Password",
+  signUpButton: "Sign up",
+  alreadyHaveAccount: "Already have an account?",
+  signInLink: "Sign in",
+
+  // Validation
+  errorEmailRequired: "Email address is required",
+  errorPasswordRequired: "Password is required",
+  errorPasswordLength: "Password must be at least 6 characters",
+  errorNameRequired: "Full Name is required",
+
+  // Verify
+  verifyTitle: "Verify your account",
+  verifySubtitle: "We have sent a verification email to",
+  verifyInstruction: "Please check your inbox and click the link to activate your account.",
+  backToLogin: "Back to Login",
 };

@@ -66,42 +66,43 @@ export default function InstallPrompt() {
     if (pathname !== "/") return null;
 
     return (
-        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-2xl p-4 z-50 animate-in slide-in-from-bottom-5 duration-500">
-            <div className="flex items-start gap-4">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[95%] max-w-sm md:max-w-md md:left-auto md:right-4 md:translate-x-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-2xl p-4 z-50 animate-in slide-in-from-bottom-5 duration-500">
+            <div className="flex items-start gap-3">
                 <div className="shrink-0 p-2 bg-white dark:bg-gray-950 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                         src="/v-icon-black.png"
                         alt="Vallaroo Logo"
-                        className="w-10 h-10 object-contain dark:invert"
+                        className="w-8 h-8 md:w-10 md:h-10 object-contain dark:invert"
                     />
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start">
-                        <h3 className="font-semibold text-lg mb-1 dark:text-white">
+                        <h3 className="font-semibold text-base md:text-lg mb-1 dark:text-white truncate pr-2">
                             Install Vallaroo
                         </h3>
                         <button
                             onClick={handleDismiss}
-                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors -mt-1 -mr-1"
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors -mt-1 -mr-1 p-1"
                         >
-                            <X size={20} />
+                            <X size={18} />
                         </button>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                    <p className="text-xs md:text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">
                         Install our app for a better experience, offline access, and easier
                         shopping!
                     </p>
                     <div className="flex gap-2">
                         <button
                             onClick={handleInstallClick}
-                            className="flex items-center justify-center gap-2 bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                            className="flex items-center justify-center gap-1.5 bg-black dark:bg-white text-white dark:text-black px-3 py-2 rounded-lg text-xs md:text-sm font-medium hover:opacity-90 transition-opacity whitespace-nowrap"
                         >
-                            <Download size={16} />
+                            <Download size={14} className="md:w-4 md:h-4" />
                             Install App
                         </button>
                         <button
                             onClick={handleDismiss}
-                            className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                            className="px-3 py-2 rounded-lg text-xs md:text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors whitespace-nowrap"
                         >
                             Not now
                         </button>
