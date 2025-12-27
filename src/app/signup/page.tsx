@@ -24,15 +24,15 @@ export default function SignUpPage() {
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
         if (!fullName.trim()) {
-            newErrors.fullName = t.errorNameRequired;
+            newErrors.fullName = t('errorNameRequired');
         }
         if (!email.trim()) {
-            newErrors.email = t.errorEmailRequired;
+            newErrors.email = t('errorEmailRequired');
         }
         if (!password) {
-            newErrors.password = t.errorPasswordRequired;
+            newErrors.password = t('errorPasswordRequired');
         } else if (password.length < 6) {
-            newErrors.password = t.errorPasswordLength;
+            newErrors.password = t('errorPasswordLength');
         }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -92,17 +92,17 @@ export default function SignUpPage() {
                         <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 dark:bg-green-900 mb-6">
                             <Mail className="h-8 w-8 text-green-600 dark:text-green-300" />
                         </div>
-                        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{t.verifyTitle}</h2>
+                        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{t('verifyTitle')}</h2>
                         <p className="text-gray-600 dark:text-gray-300 mb-8">
-                            {t.verifySubtitle} <span className="font-semibold text-gray-900 dark:text-white">{email}</span>.
+                            {t('verifySubtitle')} <span className="font-semibold text-gray-900 dark:text-white">{email}</span>.
                             <br />
-                            {t.verifyInstruction}
+                            {t('verifyInstruction')}
                         </p>
                         <Link
                             href="/signin"
                             className="inline-flex w-full justify-center rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors"
                         >
-                            {t.backToLogin}
+                            {t('backToLogin')}
                         </Link>
                     </div>
                 </div>
@@ -118,9 +118,9 @@ export default function SignUpPage() {
                 <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
                     <div className="px-8 py-10">
                         <div className="text-center mb-8">
-                            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{t.signUpTitle}</h2>
+                            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{t('signUpTitle')}</h2>
                             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                {t.signUpSubtitle}
+                                {t('signUpSubtitle')}
                             </p>
                         </div>
 
@@ -128,7 +128,7 @@ export default function SignUpPage() {
                             {/* Full Name */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    {t.fullNameLabel} <span className="text-red-500">*</span>
+                                    {t('fullNameLabel')} <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -155,7 +155,7 @@ export default function SignUpPage() {
                             {/* Email */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    {t.emailAddressLabel} <span className="text-red-500">*</span>
+                                    {t('emailAddressLabel')} <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -182,7 +182,7 @@ export default function SignUpPage() {
                             {/* Password */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    {t.passwordLabel} <span className="text-red-500">*</span>
+                                    {t('passwordLabel')} <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -241,7 +241,7 @@ export default function SignUpPage() {
                                     {loading ? (
                                         <Loader2 className="h-5 w-5 animate-spin" />
                                     ) : (
-                                        t.signUpButton
+                                        t('signUpButton')
                                     )}
                                 </button>
                             </div>
@@ -251,7 +251,7 @@ export default function SignUpPage() {
                                     <div className="w-full border-t border-gray-300 dark:border-gray-600" />
                                 </div>
                                 <div className="relative flex justify-center text-sm">
-                                    <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">{t.orContinueWith}</span>
+                                    <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">{t('orContinueWith')}</span>
                                 </div>
                             </div>
 
@@ -287,9 +287,9 @@ export default function SignUpPage() {
 
                         <div className="mt-6 text-center">
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {t.alreadyHaveAccount}{' '}
+                                {t('alreadyHaveAccount')}{' '}
                                 <Link href="/signin" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
-                                    {t.signInLink}
+                                    {t('signInLink')}
                                 </Link>
                             </p>
                         </div>

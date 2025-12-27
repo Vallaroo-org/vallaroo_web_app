@@ -16,14 +16,18 @@ export default function SignInPage() {
     const [email, setEmail] = useState('');
 
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
         if (!email) {
-            newErrors.email = t.errorEmailRequired;
+            newErrors.email = t('errorEmailRequired');
         }
         if (!password) {
-            newErrors.password = t.errorPasswordRequired;
+            newErrors.password = t('errorPasswordRequired');
         }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -82,10 +86,10 @@ export default function SignInPage() {
                     <div className="space-y-6">
                         <div className="text-center">
                             <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">
-                                {t.signInTitle}
+                                {t('signInTitle')}
                             </h2>
                             <p className="mt-2 text-sm text-gray-600">
-                                {t.signInSubtitle}
+                                {t('signInSubtitle')}
                             </p>
                         </div>
 
@@ -93,7 +97,7 @@ export default function SignInPage() {
                             <div className="space-y-4">
                                 <div>
                                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 ml-1 mb-1">
-                                        {t.emailAddressLabel} <span className="text-red-500">*</span>
+                                        {t('emailAddressLabel')} <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative group">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -122,7 +126,7 @@ export default function SignInPage() {
                                 <div>
                                     <div className="flex items-center justify-between ml-1 mb-1">
                                         <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                            {t.passwordLabel} <span className="text-red-500">*</span>
+                                            {t('passwordLabel')} <span className="text-red-500">*</span>
                                         </label>
                                     </div>
                                     <div className="relative group">
@@ -171,13 +175,13 @@ export default function SignInPage() {
                                         className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
                                     />
                                     <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-800">
-                                        {t.rememberMe}
+                                        {t('rememberMe')}
                                     </label>
                                 </div>
 
                                 <div className="text-sm">
                                     <a href="#" className="font-medium text-blue-600 hover:text-blue-500 hover:underline">
-                                        {t.forgotPassword}
+                                        {t('forgotPassword')}
                                     </a>
                                 </div>
                             </div>
@@ -203,7 +207,7 @@ export default function SignInPage() {
                                     {loading ? (
                                         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                                     ) : null}
-                                    {t.signInButton}
+                                    {t('signInButton')}
                                 </button>
                             </div>
                         </form>
@@ -214,7 +218,7 @@ export default function SignInPage() {
                             </div>
                             <div className="relative flex justify-center text-sm">
                                 <span className="bg-white/80 px-2 text-gray-500 rounded-lg backdrop-blur-sm">
-                                    {t.orContinueWith}
+                                    {t('orContinueWith')}
                                 </span>
                             </div>
                         </div>
@@ -248,9 +252,9 @@ export default function SignInPage() {
                             </button>
                         </div>
                         <p className="mt-10 text-center text-sm text-gray-500">
-                            {t.dontHaveAccount}{' '}
+                            {t('dontHaveAccount')}{' '}
                             <Link href="/signup" className="font-semibold leading-6 text-blue-600 hover:text-blue-500 hover:underline transition-all duration-200">
-                                {t.signUpLink}
+                                {t('signUpLink')}
                             </Link>
                         </p>
                     </div>
