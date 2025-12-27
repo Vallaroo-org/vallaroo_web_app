@@ -141,7 +141,8 @@ const StoreView = ({ store, products, services = [], stories }: StoreViewProps) 
     const handleWhatsAppInquiry = () => {
         if (!store.phone_number) return;
         const cleanedNumber = store.phone_number.replace(/\D/g, '');
-        const whatsappUrl = `https://wa.me/${cleanedNumber}?text=${encodeURIComponent(t('inquireShopMsg', {
+        const finalNumber = cleanedNumber.length === 10 ? `91${cleanedNumber}` : cleanedNumber.startsWith('91') ? cleanedNumber : `91${cleanedNumber}`;
+        const whatsappUrl = `https://wa.me/${finalNumber}?text=${encodeURIComponent(t('inquireShopMsg', {
             shopName: getLocalizedContent(store, 'name'),
             link: window.location.href
         }))}`;
@@ -270,7 +271,10 @@ const StoreView = ({ store, products, services = [], stories }: StoreViewProps) 
                     <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3 w-full sm:w-auto mt-4 sm:mt-0">
                         {store.phone_number ? (
                             <a
-                                href={`https://wa.me/${store.phone_number.replace(/\D/g, '')}?text=${encodeURIComponent(t('inquireShopMsg', {
+                                href={`https://wa.me/${(() => {
+                                    const clean = store.phone_number.replace(/\D/g, '');
+                                    return clean.length === 10 ? `91${clean}` : clean.startsWith('91') ? clean : `91${clean}`;
+                                })()}?text=${encodeURIComponent(t('inquireShopMsg', {
                                     shopName: getLocalizedContent(store, 'name'),
                                     link: typeof window !== 'undefined' ? window.location.href : ''
                                 }))}`}

@@ -51,7 +51,8 @@ const ServiceDetailsClient = ({ service }: { service: Service }) => {
         if (!service.shop?.whatsapp_number) return;
 
         const cleanedWhatsappNumber = service.shop.whatsapp_number.replace(/\D/g, '');
-        const whatsappUrl = `https://wa.me/${cleanedWhatsappNumber.startsWith('91') ? cleanedWhatsappNumber : '91' + cleanedWhatsappNumber}?text=${whatsappMessage}`;
+        const finalNumber = cleanedWhatsappNumber.length === 10 ? `91${cleanedWhatsappNumber}` : cleanedWhatsappNumber.startsWith('91') ? cleanedWhatsappNumber : `91${cleanedWhatsappNumber}`;
+        const whatsappUrl = `https://wa.me/${finalNumber}?text=${whatsappMessage}`;
         window.open(whatsappUrl, '_blank');
     };
 

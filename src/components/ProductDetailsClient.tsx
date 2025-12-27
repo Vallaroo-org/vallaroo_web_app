@@ -233,7 +233,10 @@ const ProductDetailsClient = ({ product }: ProductDetailsClientProps) => {
                     {/* WhatsApp Inquiry */}
                     {product.shops?.phone_number && (
                         <a
-                            href={`https://wa.me/${product.shops.phone_number.replace(/\D/g, '')}?text=${encodeURIComponent(t('inquireProductMsg', {
+                            href={`https://wa.me/${(() => {
+                                const clean = product.shops.phone_number.replace(/\D/g, '');
+                                return clean.length === 10 ? `91${clean}` : clean.startsWith('91') ? clean : `91${clean}`;
+                            })()}?text=${encodeURIComponent(t('inquireProductMsg', {
                                 shopName: shopName,
                                 productName: productName,
                                 link: typeof window !== 'undefined' ? window.location.href : ''
