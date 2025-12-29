@@ -49,6 +49,12 @@ const StoreView = ({ store, products, services = [], stories }: StoreViewProps) 
     const [isFollowing, setIsFollowing] = useState(false);
     const [isFollowLoading, setIsFollowLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
+    const [currentUrl, setCurrentUrl] = useState('');
+
+    // Set URL on mount to avoid hydration mismatch
+    useEffect(() => {
+        setCurrentUrl(window.location.href);
+    }, []);
 
     // Initial check for follow status
     useEffect(() => {
@@ -144,7 +150,7 @@ const StoreView = ({ store, products, services = [], stories }: StoreViewProps) 
         const finalNumber = cleanedNumber.length === 10 ? `91${cleanedNumber}` : cleanedNumber.startsWith('91') ? cleanedNumber : `91${cleanedNumber}`;
         const whatsappUrl = `https://wa.me/${finalNumber}?text=${encodeURIComponent(t('inquireShopMsg', {
             shopName: getLocalizedContent(store, 'name'),
-            link: window.location.href
+            link: currentUrl
         }))}`;
         window.open(whatsappUrl, '_blank');
     };
@@ -276,7 +282,7 @@ const StoreView = ({ store, products, services = [], stories }: StoreViewProps) 
                                     return clean.length === 10 ? `91${clean}` : clean.startsWith('91') ? clean : `91${clean}`;
                                 })()}?text=${encodeURIComponent(t('inquireShopMsg', {
                                     shopName: getLocalizedContent(store, 'name'),
-                                    link: typeof window !== 'undefined' ? window.location.href : ''
+                                    link: currentUrl
                                 }))}`}
                                 target="_blank"
                                 rel="noopener noreferrer"

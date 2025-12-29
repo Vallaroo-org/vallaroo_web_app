@@ -23,13 +23,24 @@ export interface ProductDetail {
         phone_number?: string;
         logo_url?: string;
     };
+    stock?: number;
+    specifications?: any;
+    // New fields
+    brand_name?: string;
+    brand_name_ml?: string;
+    unit?: string;
+    unit_ml?: string;
+    warranty_period?: string;
+    manufacturing_date?: string;
+    expiry_date?: string;
 }
 
 export async function getProduct(productId: string): Promise<ProductDetail | null> {
     const { data, error } = await supabase
         .from('products')
         .select(`
-            id, name, name_ml, price, mrp, description, description_ml, image_urls, shop_id,
+            id, name, name_ml, price, mrp, description, description_ml, image_urls, shop_id, stock, specifications,
+            brand_name, brand_name_ml, unit, unit_ml, warranty_period, manufacturing_date, expiry_date,
             shops!inner (id, name, name_ml, phone_number, logo_url, is_hidden, is_verified, businesses!inner(is_hidden))
         `)
         .eq('id', productId)

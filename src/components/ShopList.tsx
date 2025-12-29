@@ -16,6 +16,8 @@ interface Shop extends ActionShop {
 
 interface ShopListProps {
     initialShops?: Shop[];
+    searchMode?: boolean;
+    title?: string;
 }
 
 const ShopCard = ({ shop }: { shop: Shop }) => {
@@ -110,7 +112,7 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
-const ShopList = ({ initialShops = [] }: ShopListProps) => {
+const ShopList = ({ initialShops = [], searchMode = false, title }: ShopListProps) => {
     const [shops, setShops] = useState<Shop[]>(initialShops);
     const [categories, setCategories] = useState<ShopCategory[]>([]);
     const [selectedCategory, setSelectedCategory] = useState('all');
@@ -239,56 +241,64 @@ const ShopList = ({ initialShops = [] }: ShopListProps) => {
         };
     }, [hasMore, loading, loadShops]);
 
+    if (searchMode && !loading && shops.length === 0) {
+        return null;
+    }
+
     return (
-        <div>
+        <div className={searchMode ? "py-4" : ""}>
+            {title && shops.length > 0 && <h2 className="text-2xl font-semibold tracking-tight mb-6">{title}</h2>}
+
             {/* Header with Sort - Search moved to Navbar */}
-            <div className="flex flex-col sm:flex-row justify-end mb-6 gap-4 items-center">
-                {/* Sort */}
-                <div className="relative w-full sm:w-48 order-2 sm:order-1">
-                    <select
-                        className="w-full px-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer transition-shadow"
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value as ShopSortOption)}
-                    >
-                        <option value="newest">{t('newest') || 'Newest'}</option>
-                        <option value="name_asc">{t('nameAZ') || 'Name: A-Z'}</option>
-                    </select>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <Filter className="h-4 w-4 text-muted-foreground" />
+            {!searchMode && (
+                <div className="flex flex-col sm:flex-row justify-end mb-6 gap-4 items-center">
+                    {/* Sort */}
+                    <div className="relative w-full sm:w-48 order-2 sm:order-1">
+                        <select
+                            className="w-full px-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer transition-shadow"
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value as ShopSortOption)}
+                        >
+                            <option value="newest">{t('newest') || 'Newest'}</option>
+                            <option value="name_asc">{t('nameAZ') || 'Name: A-Z'}</option>
+                        </select>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <Filter className="h-4 w-4 text-muted-foreground" />
+                        </div>
                     </div>
+
+                    {/* Search removed from here */}
                 </div>
-
-                {/* Search removed from here */}
-            </div>
-
-            {/* Header with Sort ... */}
+            )}
 
             {/* Category Filter Chips */}
-            <div className="flex overflow-x-auto pb-4 gap-2 scrollbar-none mb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
-                <button
-                    type="button"
-                    onClick={() => setSelectedCategory('all')}
-                    className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-semibold transition-all border ${selectedCategory === 'all'
-                        ? 'bg-black text-white dark:bg-white dark:text-black border-transparent shadow-sm'
-                        : 'bg-secondary/50 text-secondary-foreground border-transparent hover:bg-secondary hover:text-foreground'
-                        }`}
-                >
-                    {t('all' as any) || 'All'}
-                </button>
-                {categories.map((cat) => (
+            {!searchMode && (
+                <div className="flex overflow-x-auto pb-4 gap-2 scrollbar-none mb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
                     <button
-                        key={cat.id}
                         type="button"
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-semibold transition-all border ${selectedCategory === cat.id
+                        onClick={() => setSelectedCategory('all')}
+                        className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-semibold transition-all border ${selectedCategory === 'all'
                             ? 'bg-black text-white dark:bg-white dark:text-black border-transparent shadow-sm'
                             : 'bg-secondary/50 text-secondary-foreground border-transparent hover:bg-secondary hover:text-foreground'
                             }`}
                     >
-                        {locale === 'ml' ? (cat.name_ml || cat.name) : cat.name}
+                        {t('all' as any) || 'All'}
                     </button>
-                ))}
-            </div>
+                    {categories.map((cat) => (
+                        <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => setSelectedCategory(cat.id)}
+                            className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-semibold transition-all border ${selectedCategory === cat.id
+                                ? 'bg-black text-white dark:bg-white dark:text-black border-transparent shadow-sm'
+                                : 'bg-secondary/50 text-secondary-foreground border-transparent hover:bg-secondary hover:text-foreground'
+                                }`}
+                        >
+                            {locale === 'ml' ? (cat.name_ml || cat.name) : cat.name}
+                        </button>
+                    ))}
+                </div>
+            )}
 
             {shops.length > 0 ? (
                 <>

@@ -47,10 +47,22 @@ const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
   const shopName = getLocalizedContent(shop, 'name');
   const productName = getLocalizedContent(product, 'name');
 
+  // Stock Logic
+  const { stock, specifications } = product;
+  // If stock is undefined, assume available (legacy behavior or optional)
+  const isOutOfStock = stock !== undefined && stock !== null && stock <= 0;
+  const hideWhenOutOfStock = specifications?.hide_out_of_stock === true;
+  const isLowStock = stock !== undefined && stock !== null && stock > 0 && stock <= (specifications?.min_stock_alert || 5);
+
+  if (isOutOfStock && hideWhenOutOfStock) {
+    return null;
+  }
+
   const handleAddToCart = (e: React.MouseEvent) => {
-    // ... (keep existing Logic)
     e.stopPropagation();
     e.preventDefault();
+
+    if (isOutOfStock) return; // double check
 
     if (addingRef.current) return;
     addingRef.current = true;
@@ -81,8 +93,6 @@ const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
       addToWishlist(product);
     }
   };
-
-  // ... (Keep other handlers like Inquire/Share)
 
   const handleInquire = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -131,7 +141,7 @@ const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
 
   return (
     <div
-      className="bg-card text-card-foreground rounded-xl border border-border/50 shadow-sm hover:shadow-2xl hover:border-primary/20 transition-all duration-300 cursor-pointer group flex flex-col h-full overflow-hidden group-hover:-translate-y-1"
+      className={`bg-card text-card-foreground rounded-xl border border-border/50 shadow-sm hover:shadow-2xl hover:border-primary/20 transition-all duration-300 cursor-pointer group flex flex-col h-full overflow-hidden group-hover:-translate-y-1 ${isOutOfStock ? 'opacity-75' : ''}`}
       onClick={handleCardClick}
     >
       {/* Edge-to-Edge Image */}
@@ -141,7 +151,7 @@ const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
           <img
             src={selectedImage}
             alt={productName}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${isOutOfStock ? 'grayscale' : ''}`}
           />
         ) : (
           <div className="flex flex-col items-center justify-center text-muted-foreground/50">
@@ -149,14 +159,35 @@ const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
           </div>
         )}
 
-        {/* Discount Badge */}
-        {hasDiscount && discountPercent > 0 && (
-          <div className="absolute top-3 left-3 z-10">
+        {/* Badges Container */}
+        <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5 items-start">
+          {/* Out of Stock Badge */}
+          {isOutOfStock && (
+            <span className="bg-black/80 backdrop-blur-md text-white text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-full shadow-lg border border-white/20 flex items-center gap-1.5 animate-in fade-in zoom-in duration-300">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+              </svg>
+              {((t as any)('outOfStock') === 'outOfStock' ? 'Out of Stock' : (t as any)('outOfStock'))}
+            </span>
+          )}
+
+          {/* Low Stock Badge */}
+          {!isOutOfStock && isLowStock && (
+            <span className="bg-amber-500/90 backdrop-blur-md text-white text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-full shadow-lg border border-white/20 flex items-center gap-1.5 animate-pulse">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              {((t as any)('limitedStock') === 'limitedStock' ? 'Limited Stock' : (t as any)('limitedStock'))}
+            </span>
+          )}
+
+          {/* Discount Badge */}
+          {!isOutOfStock && hasDiscount && discountPercent > 0 && (
             <span className="bg-red-600 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-md shadow-md animate-in fade-in zoom-in duration-300">
               {discountPercent}% OFF
             </span>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Wishlist Button */}
         <div className="absolute top-3 right-3 z-20">
@@ -191,7 +222,7 @@ const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
 
           <div className="mt-3 flex items-end justify-between">
             <div className="flex flex-col">
-              {hasDiscount ? (
+              {hasDiscount && !isOutOfStock ? (
                 <div className="flex items-center gap-2 mb-0.5">
                   <span className="text-sm text-muted-foreground line-through decoration-red-500/50">
                     {formatPrice(mrp)}
@@ -201,6 +232,7 @@ const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
                   </span>
                 </div>
               ) : (
+                // Maintain spacing to avoid layout jump
                 <div className="h-6"></div>
               )}
               <span className="font-bold text-2xl text-primary tracking-tight">{formatPrice(product.price)}</span>
@@ -211,13 +243,20 @@ const ProductCard = ({ product, shop }: { product: Product; shop: Shop }) => {
         <div className="mt-auto flex flex-col gap-2 w-full pt-3 sm:pt-4 border-t border-border/40">
           <button
             onClick={handleAddToCart}
+            disabled={isOutOfStock}
             className={`w-full px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all flex items-center justify-center gap-1.5 font-medium text-xs sm:text-sm shadow-sm active:scale-95 ${isAdded
               ? 'bg-green-600 text-white shadow-green-200'
-              : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-lg'
+              : isOutOfStock
+                ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-70'
+                : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-lg'
               }`}
           >
             {isAdded ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
-            <span className="truncate">{t('addToCart') || 'Add'}</span>
+            <span className="truncate">
+              {isOutOfStock
+                ? ((t as any)('outOfStock') === 'outOfStock' ? 'Out of Stock' : (t as any)('outOfStock'))
+                : (t('addToCart') || 'Add')}
+            </span>
           </button>
 
           {hasWhatsapp && (

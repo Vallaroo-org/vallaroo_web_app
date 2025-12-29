@@ -34,6 +34,8 @@ export interface Product {
         latitude?: number;
         longitude?: number;
     };
+    stock?: number;
+    specifications?: any;
 }
 
 export type SortOption = 'newest' | 'price_asc' | 'price_desc' | 'name_asc';
@@ -62,8 +64,8 @@ export async function getProducts({
 
     // Select fields - include shops join for global view
     const selectFields = shopId
-        ? 'id, name, name_ml, price, mrp, description, description_ml, image_urls, category_id, global_category, global_category_id, is_active, created_at'
-        : 'id, name, name_ml, price, mrp, description, description_ml, image_urls, category_id, global_category, global_category_id, is_active, created_at, shop_id, shops!inner (id, name, name_ml, phone_number, logo_url, is_verified, is_hidden, latitude, longitude)';
+        ? 'id, name, name_ml, price, mrp, description, description_ml, image_urls, category_id, global_category, global_category_id, is_active, created_at, stock, specifications'
+        : 'id, name, name_ml, price, mrp, description, description_ml, image_urls, category_id, global_category, global_category_id, is_active, created_at, stock, specifications, shop_id, shops!inner (id, name, name_ml, phone_number, logo_url, is_verified, is_hidden, latitude, longitude)';
 
     let query = supabase
         .from('products')
@@ -82,33 +84,32 @@ export async function getProducts({
 
     // Search
     if (search) {
-        // Search in English or Malayalam name
-        query = query.or(`name.ilike.%${search}%,name_ml.ilike.%${search}%`);
+        // Search in English or Malayalam name, description, or global category
+        query = query.or(`name.ilike.%${search}%,name_ml.ilike.%${search}%,description.ilike.%${search}%,global_category.ilike.%${search}%`);
     }
 
-    // Shop Category Filter
+    // Sub-Category Filter (previously 'category' param)
     if (category && category !== 'all') {
-        // If the frontend passes a category NAME, we might need to join/filter by name.
-        // However, ProductList logic used `p.category` which was likely just a string field or id.
-        // If `category` param is an ID:
-        // query = query.eq('category_id', category);
+        // If category looks like a UUID, use it directly
+        if (category.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+            query = query.eq('global_sub_category_id', category);
+        } else {
+            // Otherwise, treat it as a sub-category NAME and look up the ID
+            const { data: subCatData } = await supabase
+                .from('product_sub_categories')
+                .select('id')
+                .ilike('name', category)
+                .single();
 
-        // If usage relies on a 'category' string field on the product table (denormalized) OR mapped:
-        // The current Product interface has `category: string | null`. 
-        // Let's assume for now we filter by `category_id` if it's a UUID, 
-        // or if the ProductList logic derived it. 
-        // Wait, the current ProductList derives categories from `products.map(p => p.category)`.
-        // If `category` is not on the table, this is tricky.
-        // Let's check the schema or assume mapped. 
-        // Reviewing `ProductList.tsx`: imports `Product` interface: `category: string | null`.
-        // Reviewing `api.ts`: `category_id: string | null`. 
-        // It seems `StorePage` fetches `*`, so maybe there is a `category` view/column or it was mapped?
-        // Let's stick to standard filtering. If 'category' is passed, it needs to match a column.
-        // I will try to filter by `category_id` if it looks like a UUID, otherwise ignoring for now to be safe
-        // or relying on client side mapping? No, user wants Server Side.
-        // I'll assume for now we filter by `category_id` if provided.
-        if (category.length > 5) { // minimal check for potentially valid ID
-            query = query.eq('category_id', category);
+            if (subCatData?.id) {
+                query = query.eq('global_sub_category_id', subCatData.id);
+            } else {
+                console.warn(`Sub-category not found: ${category}`);
+                // Optionally: don't filter or return empty? 
+                // If name not found, likely no products will match if we filtered by known ID.
+                // Let's filter by a dummy ID to return 0 results if name is invalid to be safe.
+                query = query.eq('global_sub_category_id', '00000000-0000-0000-0000-000000000000');
+            }
         }
     }
 

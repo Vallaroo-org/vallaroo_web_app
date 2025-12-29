@@ -84,8 +84,25 @@ export async function getServices({
 
     // Search
     if (search) {
-        // Assuming simple search on name/description. Multi-language support if needed similar to products.
-        query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+        let orClause = `name.ilike.%${search}%,description.ilike.%${search}%`;
+
+        // Search in Service Categories
+        // First find matching category IDs
+        const { data: catData } = await supabase
+            .from('service_categories')
+            .select('id')
+            .or(`name.ilike.%${search}%,name_ml.ilike.%${search}%`);
+
+        if (catData && catData.length > 0) {
+            const catIds = catData.map(c => `category_id.eq.${c.id}`).join(',');
+            if (catIds) {
+                // Supabase OR with multiple ID eqs is valid: id.eq.1,id.eq.2
+                // Append to the orClause
+                orClause += `,${catIds}`;
+            }
+        }
+
+        query = query.or(orClause);
     }
 
     // Sort

@@ -1,16 +1,22 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ShopList from '../components/ShopList';
 import GlobalProductList from '../components/GlobalProductList';
 import GlobalServiceList from '../components/GlobalServiceList';
 import FollowingStories from '../components/FollowingStories';
-import { MapPin, X, Navigation } from 'lucide-react';
+import { MapPin, X, Navigation, Search } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useLocation } from '../context/LocationContext';
 import AdBanner from '../components/AdBanner';
+import { useSearchParams } from 'next/navigation';
+
+import { getProducts } from './actions/get-products';
+import { getServices } from './actions/get-services';
+import { getShops } from './actions/get-shops';
+import { Loader2 } from 'lucide-react';
 
 const DiscoverContent = () => {
   const [activeTab, setActiveTab] = useState<'shops' | 'products' | 'services'>('products');
@@ -18,6 +24,41 @@ const DiscoverContent = () => {
   const { t } = useLanguage();
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [manualInput, setManualInput] = useState('');
+
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('search');
+  const isSearching = !!searchQuery;
+  const [noResults, setNoResults] = useState(false);
+  const [isCheckingResults, setIsCheckingResults] = useState(false);
+
+  useEffect(() => {
+    const checkResults = async () => {
+      if (!isSearching || !searchQuery) {
+        setNoResults(false);
+        return;
+      }
+
+      setIsCheckingResults(true);
+      try {
+        const [productsRes, servicesRes, shopsRes] = await Promise.all([
+          getProducts({ search: searchQuery, limit: 1 }),
+          getServices({ search: searchQuery, limit: 1 }),
+          getShops({ search: searchQuery, limit: 1 })
+        ]);
+
+        const totalResults = productsRes.products.length + servicesRes.services.length + shopsRes.shops.length;
+        setNoResults(totalResults === 0);
+      } catch (error) {
+        console.error("Error checking search results:", error);
+        // Fallback to showing lists (they handle errors internally or show nothing)
+        setNoResults(false);
+      } finally {
+        setIsCheckingResults(false);
+      }
+    };
+
+    checkResults();
+  }, [searchQuery, isSearching]);
 
   const handleManualSubmit = () => {
     if (manualInput.trim()) {
@@ -39,9 +80,9 @@ const DiscoverContent = () => {
         <div className="mb-8 space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('discoverLocal')}</h1>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">{isSearching ? t('searchResults') || 'Search Results' : t('discoverLocal')}</h1>
               <p className="text-muted-foreground max-w-2xl">
-                {t('exploreBest')}
+                {isSearching ? `${t('resultsFor') || 'Results for'} "${searchQuery}"` : t('exploreBest')}
               </p>
             </div>
 
@@ -61,62 +102,103 @@ const DiscoverContent = () => {
           <FollowingStories />
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-4 mb-8 max-w-lg">
-          <button
-            onClick={() => setActiveTab('products')}
-            className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition-all duration-200 focus:outline-none focus:ring-2 ring-offset-2 ring-offset-background focus:ring-primary ${activeTab === 'products'
-              ? 'bg-primary text-primary-foreground shadow-md'
-              : 'text-muted-foreground hover:bg-background/50 hover:text-foreground hover:shadow-sm'
-              }`}
-          >
-            {t('products') || 'Products'}
-          </button>
-          <button
-            onClick={() => setActiveTab('services')}
-            className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition-all duration-200 focus:outline-none focus:ring-2 ring-offset-2 ring-offset-background focus:ring-primary ${activeTab === 'services'
-              ? 'bg-primary text-primary-foreground shadow-md'
-              : 'text-muted-foreground hover:bg-background/50 hover:text-foreground hover:shadow-sm'
-              }`}
-          >
-            {t('services') || 'Services'}
-          </button>
-          <button
-            onClick={() => setActiveTab('shops')}
-            className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition-all duration-200 focus:outline-none focus:ring-2 ring-offset-2 ring-offset-background focus:ring-primary ${activeTab === 'shops'
-              ? 'bg-primary text-primary-foreground shadow-md'
-              : 'text-muted-foreground hover:bg-background/50 hover:text-foreground hover:shadow-sm'
-              }`}
-          >
-            {t('shops')}
-          </button>
-        </div>
+        {/* Tabs - Hide when searching */}
+        {!isSearching && (
+          <div className="flex gap-4 mb-8 max-w-lg">
+            <button
+              onClick={() => setActiveTab('products')}
+              className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition-all duration-200 focus:outline-none focus:ring-2 ring-offset-2 ring-offset-background focus:ring-primary ${activeTab === 'products'
+                ? 'bg-primary text-primary-foreground shadow-md'
+                : 'text-muted-foreground hover:bg-background/50 hover:text-foreground hover:shadow-sm'
+                }`}
+            >
+              {t('products') || 'Products'}
+            </button>
+            <button
+              onClick={() => setActiveTab('services')}
+              className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition-all duration-200 focus:outline-none focus:ring-2 ring-offset-2 ring-offset-background focus:ring-primary ${activeTab === 'services'
+                ? 'bg-primary text-primary-foreground shadow-md'
+                : 'text-muted-foreground hover:bg-background/50 hover:text-foreground hover:shadow-sm'
+                }`}
+            >
+              {t('services') || 'Services'}
+            </button>
+            <button
+              onClick={() => setActiveTab('shops')}
+              className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition-all duration-200 focus:outline-none focus:ring-2 ring-offset-2 ring-offset-background focus:ring-primary ${activeTab === 'shops'
+                ? 'bg-primary text-primary-foreground shadow-md'
+                : 'text-muted-foreground hover:bg-background/50 hover:text-foreground hover:shadow-sm'
+                }`}
+            >
+              {t('shops')}
+            </button>
+          </div>
+        )}
 
         {/* Ad Banner - Feed Insert */}
         <AdBanner placement="home_feed_insert" className="h-40 md:h-56 mb-8" />
 
         {/* Content */}
-        {activeTab === 'shops' ? (
-          <section className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-semibold tracking-tight">{t('nearbyShops')}</h2>
-            </div>
-            <ShopList />
-          </section>
-        ) : activeTab === 'services' ? (
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-semibold tracking-tight">{t('nearbyServices') || 'Nearby Services'}</h2>
-            </div>
-            <GlobalServiceList />
-          </section>
+        {isSearching ? (
+          <div className="space-y-4">
+            {isCheckingResults && (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            )}
+
+            {!isCheckingResults && noResults && (
+              <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground animate-in fade-in duration-500">
+                <div className="bg-muted/50 p-4 rounded-full mb-4">
+                  <Search className="w-8 h-8 opacity-50" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-1">{t('noResultsFound') || 'No results found'}</h3>
+                <p className="text-sm">We couldn't find any matches for "{searchQuery}". Try adjusting your search.</p>
+              </div>
+            )}
+
+            {!isCheckingResults && !noResults && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <GlobalProductList
+                  searchMode={true}
+                  title={t('matchingProducts') || 'Matching Products'}
+                />
+                <GlobalServiceList
+                  searchMode={true}
+                  title={t('matchingServices') || 'Matching Services'}
+                />
+                <ShopList
+                  searchMode={true}
+                  title={t('matchingShops') || 'Matching Shops'}
+                />
+              </div>
+            )}
+          </div>
         ) : (
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-semibold tracking-tight">{t('freshFinds')}</h2>
-            </div>
-            <GlobalProductList />
-          </section>
+          <>
+            {activeTab === 'shops' ? (
+              <section className="mb-12">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-semibold tracking-tight">{t('nearbyShops')}</h2>
+                </div>
+                <ShopList />
+              </section>
+            ) : activeTab === 'services' ? (
+              <section>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-semibold tracking-tight">{t('nearbyServices') || 'Nearby Services'}</h2>
+                </div>
+                <GlobalServiceList />
+              </section>
+            ) : (
+              <section>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-semibold tracking-tight">{t('freshFinds')}</h2>
+                </div>
+                <GlobalProductList />
+              </section>
+            )}
+          </>
         )}
       </main>
       <Footer />

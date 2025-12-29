@@ -54,7 +54,23 @@ export async function getShops({
 
     // Search
     if (search) {
-        query = query.or(`name.ilike.%${search}%,name_ml.ilike.%${search}%,city.ilike.%${search}%`);
+        let orClause = `name.ilike.%${search}%,name_ml.ilike.%${search}%,city.ilike.%${search}%`;
+
+        // Search in Shop Categories
+        // First find matching category IDs
+        const { data: catData } = await supabase
+            .from('shop_categories')
+            .select('id')
+            .or(`name.ilike.%${search}%,name_ml.ilike.%${search}%`);
+
+        if (catData && catData.length > 0) {
+            const catIds = catData.map(c => `category_id.eq.${c.id}`).join(',');
+            if (catIds) {
+                orClause += `,${catIds}`;
+            }
+        }
+
+        query = query.or(orClause);
     }
 
     // Filter by type (if utilizing shop_type column 'product' | 'service' | 'both')

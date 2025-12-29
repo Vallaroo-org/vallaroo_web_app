@@ -37,7 +37,7 @@ const PartnerPage = () => {
                                     Start Selling Now
                                 </Link>
                                 <Link
-                                    href="/vallaroo-business-app.apk?v=3"
+                                    href="/vallaroo-business-app.apk?v=4"
                                     className="flex items-center justify-center gap-2 border-2 border-foreground text-foreground px-8 py-4 rounded-xl font-semibold hover:bg-foreground hover:text-background transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]"
                                     download
                                 >

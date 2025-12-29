@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Filter, ShoppingCart, Check, Loader2, MapPin, Heart, Share2, ChevronRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
+import { getProductCategories, getProductSubCategories, type ProductCategory, type ProductSubCategory } from '../app/actions/get-categories';
 import { getProducts, type Product as ActionProduct, type SortOption } from '../app/actions/get-products';
 import { useLocation } from '../context/LocationContext';
 import { getDrivingDistances } from '../lib/locationService';
@@ -15,9 +16,9 @@ interface Product extends ActionProduct {
 
 interface GlobalProductListProps {
     initialProducts?: Product[];
+    searchMode?: boolean;
+    title?: string;
 }
-
-const PRODUCT_CATEGORIES = ['Grocery', 'Fashion', 'Electronics', 'Health', 'Home', 'Food', 'Other'];
 
 // ProductCard for Global View (shows shop name)
 const GlobalProductCard = ({ product, className = "" }: { product: Product, className?: string }) => {
@@ -224,7 +225,7 @@ const CategorySection = ({
                 // Fetch limited items (e.g. 5) for this category
                 const result = await getProducts({
                     page: 1,
-                    limit: 8, // enough for a nice scroll
+                    limit: 10, // enough for a nice scroll
                     globalCategory: category,
                     sortBy: 'newest'
                 });
@@ -329,7 +330,7 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
-const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => {
+const GlobalProductList = ({ initialProducts = [], searchMode = false, title }: GlobalProductListProps) => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const urlSearchTerm = searchParams.get('search') || '';
@@ -339,6 +340,42 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
     const [sortBy, setSortBy] = useState<SortOption>('newest');
     // Derived from URL
     const selectedCategory = searchParams.get('category') || 'all';
+    const selectedSubCategory = searchParams.get('sub_category') || 'all';
+
+    // Metadata State
+    const [categories, setCategories] = useState<ProductCategory[]>([]);
+    const [subCategories, setSubCategories] = useState<ProductSubCategory[]>([]);
+
+    // Fetch Global Categories on Mount
+    useEffect(() => {
+        const fetchCats = async () => {
+            const data = await getProductCategories();
+            setCategories(data);
+        };
+        fetchCats();
+    }, []);
+
+    // Fetch Sub-Categories when Main Category changes
+    useEffect(() => {
+        const fetchSubCats = async () => {
+            if (selectedCategory && selectedCategory !== 'all') {
+                // Find ID of selected Category (by name match for now, assuming URL uses name)
+                const cat = categories.find(c => c.name.toLowerCase() === decodeURIComponent(selectedCategory).toLowerCase());
+                if (cat) {
+                    const subs = await getProductSubCategories(cat.id);
+                    setSubCategories(subs);
+                } else {
+                    setSubCategories([]);
+                }
+            } else {
+                setSubCategories([]);
+            }
+        };
+
+        if (categories.length > 0) {
+            fetchSubCats();
+        }
+    }, [selectedCategory, categories]);
 
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(false);
@@ -346,7 +383,7 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
 
     const observerTarget = useRef<HTMLDivElement>(null);
     const hasInitiallyLoaded = useRef(false);
-    const { t } = useLanguage();
+    const { t, locale } = useLanguage();
 
     // Location
     const { latitude, longitude } = useLocation();
@@ -367,6 +404,10 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
                 search: debouncedSearch,
                 sortBy: sortBy,
                 globalCategory: selectedCategory,
+                // Only pass category (sub-category) if it's selected and we are not in Home View (which is implicitly handled)
+                // Actually, logic below handles Home View return. 
+                // If sub-category picked, pass it to 'category' param of getProducts
+                category: selectedSubCategory !== 'all' ? selectedSubCategory : undefined,
             });
 
             const newProducts = result.products as Product[];
@@ -389,7 +430,7 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
         } finally {
             setLoading(false);
         }
-    }, [page, debouncedSearch, sortBy, selectedCategory, isHomeView]);
+    }, [page, debouncedSearch, sortBy, selectedCategory, selectedSubCategory, isHomeView]);
 
     // Calculate Distances for Grid Data
     useEffect(() => {
@@ -435,7 +476,7 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
         hasInitiallyLoaded.current = true;
         loadProducts(true);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debouncedSearch, sortBy, selectedCategory]);
+    }, [debouncedSearch, sortBy, selectedCategory, selectedSubCategory]);
 
     // Effect: Infinite Scroll (Grid Logic)
     useEffect(() => {
@@ -465,8 +506,20 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
         const params = new URLSearchParams(searchParams.toString());
         if (category === 'all') {
             params.delete('category');
+            params.delete('sub_category');
         } else {
             params.set('category', category);
+            params.delete('sub_category'); // Reset sub-category when changing main
+        }
+        router.push(`?${params.toString()}`, { scroll: false });
+    };
+
+    const updateSubCategory = (subCategory: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (subCategory === 'all') {
+            params.delete('sub_category');
+        } else {
+            params.set('sub_category', subCategory);
         }
         router.push(`?${params.toString()}`, { scroll: false });
     };
@@ -478,106 +531,148 @@ const GlobalProductList = ({ initialProducts = [] }: GlobalProductListProps) => 
 
     return (
         <div>
-            {/* Header with Sort and Categories */}
-            <div className="flex flex-col gap-4 mb-6">
-                <div className="flex flex-col md:flex-row justify-between gap-4 items-center">
-                    {/* Sort Container */}
-                    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-1 justify-end">
-                        <div className="relative w-full sm:w-48">
-                            <select
-                                className="w-full pl-4 pr-10 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer transition-shadow"
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                            >
-                                <option value="newest">{t('newest') || 'Newest'}</option>
-                                <option value="price_asc">{t('priceLowHigh') || 'Price: Low to High'}</option>
-                                <option value="price_desc">{t('priceHighLow') || 'Price: High to Low'}</option>
-                                <option value="name_asc">{t('nameAZ') || 'Name: A-Z'}</option>
-                            </select>
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                                <Filter className="h-4 w-4 text-muted-foreground" />
+            {!searchMode && (
+                <div className="flex flex-col gap-4 mb-6">
+                    <div className="flex flex-col md:flex-row justify-between gap-4 items-center">
+                        {/* Sort Container */}
+                        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-1 justify-end">
+                            <div className="relative w-full sm:w-48">
+                                <select
+                                    className="w-full pl-4 pr-10 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer transition-shadow"
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value as SortOption)}
+                                >
+                                    <option value="newest">{t('newest') || 'Newest'}</option>
+                                    <option value="price_asc">{t('priceLowHigh') || 'Price: Low to High'}</option>
+                                    <option value="price_desc">{t('priceHighLow') || 'Price: High to Low'}</option>
+                                    <option value="name_asc">{t('nameAZ') || 'Name: A-Z'}</option>
+                                </select>
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                    <Filter className="h-4 w-4 text-muted-foreground" />
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Global Categories Pills */}
-                <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-                    <button
-                        type="button"
-                        onClick={() => updateCategory('all')}
-                        className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-semibold transition-all border ${(decodeURIComponent(selectedCategory || '').replace(/\+/g, ' ').trim().toLowerCase() === 'all' || !selectedCategory)
-                            ? 'bg-black text-white dark:bg-white dark:text-black border-transparent shadow-sm'
-                            : 'bg-secondary/50 text-secondary-foreground border-transparent hover:bg-secondary hover:text-foreground'
-                            }`}
-                    >
-                        All
-                    </button>
-                    {PRODUCT_CATEGORIES.map((cat) => {
-                        const isSelected = decodeURIComponent(selectedCategory || '').replace(/\+/g, ' ').trim().toLowerCase() === cat.toLowerCase();
-                        return (
+                    {/* Global Categories Pills */}
+                    <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+                        <button
+                            type="button"
+                            onClick={() => updateCategory('all')}
+                            className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-semibold transition-all border ${(decodeURIComponent(selectedCategory || '').replace(/\+/g, ' ').trim().toLowerCase() === 'all' || !selectedCategory)
+                                ? 'bg-black text-white dark:bg-white dark:text-black border-transparent shadow-sm'
+                                : 'bg-secondary/50 text-secondary-foreground border-transparent hover:bg-secondary hover:text-foreground'
+                                }`}
+                        >
+                            All
+                        </button>
+
+                        {categories.map((cat) => {
+                            const isSelected = decodeURIComponent(selectedCategory || '').replace(/\+/g, ' ').trim().toLowerCase() === cat.name.toLowerCase();
+                            return (
+                                <button
+                                    key={cat.id}
+                                    type="button"
+                                    onClick={() => updateCategory(cat.name)}
+                                    className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-semibold transition-all border ${isSelected
+                                        ? 'bg-black text-white dark:bg-white dark:text-black border-transparent shadow-sm'
+                                        : 'bg-secondary/50 text-secondary-foreground border-transparent hover:bg-secondary hover:text-foreground'
+                                        }`}
+                                >
+                                    {locale === 'ml' && cat.name_ml ? cat.name_ml : cat.name}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Sub-Categories Tabs (Only if main category selected and subs exist) */}
+                    {selectedCategory !== 'all' && subCategories.length > 0 && (
+                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 border-b border-border/40 mb-2">
                             <button
-                                key={cat}
                                 type="button"
-                                onClick={() => updateCategory(cat)}
-                                className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-semibold transition-all border ${isSelected
+                                onClick={() => updateSubCategory('all')}
+                                className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${!selectedSubCategory || selectedSubCategory === 'all'
                                     ? 'bg-black text-white dark:bg-white dark:text-black border-transparent shadow-sm'
-                                    : 'bg-secondary/50 text-secondary-foreground border-transparent hover:bg-secondary hover:text-foreground'
+                                    : 'bg-background text-muted-foreground border-border hover:bg-secondary hover:text-foreground'
                                     }`}
                             >
-                                {cat}
+                                All {selectedCategory}
                             </button>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {/* MAIN CONTENT AREA */}
-            {isHomeView ? (
-                // SECTIONS VIEW (Airbnb Style)
-                <div className="space-y-4">
-                    {PRODUCT_CATEGORIES.map(category => (
-                        <CategorySection
-                            key={category}
-                            category={category}
-                            onViewAll={handleViewAll}
-                        />
-                    ))}
-
-                    {/* Fallback check: if no products loaded in any section? 
-                        CategorySection handles its own empty state (returns null).
-                    */}
-                </div>
-            ) : (
-                // GRID VIEW (Existing Logic)
-                <>
-                    {products.length > 0 ? (
-                        <>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-6 animate-in fade-in duration-500">
-                                {products.map((product) => (
-                                    <GlobalProductCard key={product.id} product={product} />
-                                ))}
-                            </div>
-
-                            {/* Loading Indicator for Infinite Scroll */}
-                            {hasMore && (
-                                <div ref={observerTarget} className="flex justify-center p-8 w-full">
-                                    {loading && <Loader2 className="animate-spin h-8 w-8 text-primary" />}
-                                </div>
-                            )}
-                        </>
-                    ) : (
-                        <div className="text-center py-12">
-                            {loading ? (
-                                <Loader2 className="animate-spin h-8 w-8 mx-auto text-primary" />
-                            ) : (
-                                <p className="text-muted-foreground">{t('noProductsFound') || 'No products found.'}</p>
-                            )}
+                            {subCategories.map((sub) => {
+                                const isSelected = decodeURIComponent(selectedSubCategory || '').replace(/\+/g, ' ').trim().toLowerCase() === sub.name.toLowerCase();
+                                return (
+                                    <button
+                                        key={sub.id}
+                                        type="button"
+                                        onClick={() => updateSubCategory(sub.name)}
+                                        className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${isSelected
+                                            ? 'bg-black text-white dark:bg-white dark:text-black border-transparent shadow-sm'
+                                            : 'bg-background text-muted-foreground border-border hover:bg-secondary hover:text-foreground'
+                                            }`}
+                                    >
+                                        {locale === 'ml' && sub.name_ml ? sub.name_ml : sub.name}
+                                    </button>
+                                );
+                            })}
                         </div>
                     )}
-                </>
+                </div>
             )}
-        </div>
+
+            {/* MAIN CONTENT AREA */}
+            <div className={searchMode ? "py-4" : ""}>
+                {title && products.length > 0 && <h2 className="text-2xl font-semibold tracking-tight mb-6">{title}</h2>}
+                {
+                    isHomeView ? (
+                        // SECTIONS VIEW (Airbnb Style)
+                        <div className="space-y-4">
+                            {/* Only show categories that we fetched */}
+                            {categories.map(cat => (
+                                <CategorySection
+                                    key={cat.id}
+                                    category={cat.name}
+                                    onViewAll={handleViewAll}
+                                />
+                            ))}
+
+                            {/* Fallback check: if no products loaded in any section? 
+                        CategorySection handles its own empty state (returns null).
+                    */}
+                        </div>
+                    ) : (
+                        // GRID VIEW (Existing Logic)
+                        <>
+                            {(products.length > 0) ? (
+                                <>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-6 animate-in fade-in duration-500">
+                                        {products.map((product) => (
+                                            <GlobalProductCard key={product.id} product={product} />
+                                        ))}
+                                    </div>
+
+                                    {/* Loading Indicator for Infinite Scroll */}
+                                    {hasMore && (
+                                        <div ref={observerTarget} className="flex justify-center p-8 w-full">
+                                            {loading && <Loader2 className="animate-spin h-8 w-8 text-primary" />}
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                searchMode && !loading ? null : (
+                                    <div className="text-center py-12">
+                                        {loading ? (
+                                            <Loader2 className="animate-spin h-8 w-8 mx-auto text-primary" />
+                                        ) : (
+                                            <p className="text-muted-foreground">{t('noProductsFound') || 'No products found.'}</p>
+                                        )}
+                                    </div>
+                                )
+                            )}
+                        </>
+                    )
+                }
+            </div>
+        </div >
     );
 };
 

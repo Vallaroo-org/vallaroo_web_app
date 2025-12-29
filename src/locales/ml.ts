@@ -71,6 +71,12 @@ export const ml = {
     inquiryUnavailable: "അന്വേഷണം ലഭ്യമല്ല",
     inclusiveTaxes: "എല്ലാ നികുതികളും ഉൾപ്പെടെ",
     off: "% കിഴിവ്",
+    outOfStock: "സ്റ്റോക്കില്ല",
+    mfgDate: "നിർമ്മാണ തീയതി",
+    expiryDate: "കാലഹരണ തീയതി",
+    warranty: "വാറന്റി",
+    productDetails: "ഉൽപ്പന്ന വിവരങ്ങൾ",
+    limitedStock: "കുറച്ച് സ്റ്റോക്ക് മാത്രം",
     productNotFound: "ഉൽപ്പന്നം കണ്ടെത്തിയില്ല",
     storeNotFound: "കട കണ്ടെത്തിയില്ല",
     productNotFoundDesc: "നിങ്ങൾ തിരയുന്ന ഉൽപ്പന്നം നിലവിലില്ല അല്ലെങ്കിൽ നീക്കംചെയ്‌തു.",
@@ -116,6 +122,12 @@ export const ml = {
     searchServices: "സേവനങ്ങൾ തിരയുക...",
     noServicesFound: "സേവനങ്ങൾ ഒന്നും കണ്ടെത്തിയില്ല.",
     freshServices: "പുതിയ സേവനങ്ങൾ",
+    matchingShops: "യോജിച്ച കടകൾ",
+    matchingServices: "യോജിച്ച സേവനങ്ങൾ",
+    matchingProducts: "യോജിച്ച ഉൽപ്പന്നങ്ങൾ",
+    searchResults: "തിരയൽ ഫലങ്ങൾ",
+    resultsFor: "ഫലങ്ങൾ",
+    noResultsFound: "ഫലങ്ങളൊന്നും കണ്ടെത്തിയില്ല",
 
     // Footer
     company: "കമ്പനി",
@@ -165,6 +177,11 @@ export const ml = {
     itemsLabel: "സാധനങ്ങൾ",
     customerDetailsLabel: "ഉപഭോക്താവിന്റെ വിവരങ്ങൾ",
     viewOrderLink: "ഓർഡർ കാണുക: {link}",
+    hoursLabel: "പ്രവർത്തന സമയം",
+    servicesLabel: "സേവനങ്ങൾ",
+    deliveryAvailable: "ഡെലിവറി ലഭ്യമാണ്",
+    takeawayAvailable: "ടേക്ക് എവേ / ബുക്കിംഗ്",
+    temporarilyClosed: "താൽക്കാലികമായി അടച്ചിരിക്കുന്നു",
 
     // Auth
     signInTitle: "സ്വാഗതം",

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
@@ -20,6 +20,11 @@ const ProductDetailsClient = ({ product }: ProductDetailsClientProps) => {
     const [quantity, setQuantity] = useState(1);
     const [isWishlisted, setIsWishlisted] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(product.image_urls?.[0] || null);
+    const [currentUrl, setCurrentUrl] = useState('');
+
+    useEffect(() => {
+        setCurrentUrl(window.location.href);
+    }, []);
 
     const getLocalizedContent = (item: any, field: string) => {
         if (!item) return '';
@@ -83,6 +88,11 @@ const ProductDetailsClient = ({ product }: ProductDetailsClientProps) => {
     const productDescription = getLocalizedContent(product, 'description');
     const shopName = product.shops ? getLocalizedContent(product.shops, 'name') : 'Unknown Shop';
 
+    // Stock Logic
+    const { stock, specifications } = product;
+    const isOutOfStock = stock !== undefined && stock !== null && stock <= 0;
+    const isLowStock = stock !== undefined && stock !== null && stock > 0 && stock <= (specifications?.min_stock_alert || 5);
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
             {/* Image Gallery */}
@@ -93,13 +103,33 @@ const ProductDetailsClient = ({ product }: ProductDetailsClientProps) => {
                         <img
                             src={selectedImage}
                             alt={productName}
-                            className="h-full w-full object-cover"
+                            className={`h-full w-full object-cover ${isOutOfStock ? 'grayscale' : ''}`}
                         />
                     ) : (
                         <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/50">
                             <svg className="w-20 h-20 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
                         </div>
                     )}
+
+                    {/* Stock Badges (Top Left) */}
+                    <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
+                        {isOutOfStock && (
+                            <span className="bg-black/80 backdrop-blur-md text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg border border-white/20 flex items-center gap-2 animate-in fade-in zoom-in duration-300">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                </svg>
+                                {(t as any)('outOfStock') === 'outOfStock' ? 'Out of Stock' : (t as any)('outOfStock')}
+                            </span>
+                        )}
+                        {!isOutOfStock && isLowStock && (
+                            <span className="bg-amber-500/90 backdrop-blur-md text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg border border-white/20 flex items-center gap-2 animate-pulse">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                {(t as any)('limitedStock') === 'limitedStock' ? 'Limited Stock' : (t as any)('limitedStock')}
+                            </span>
+                        )}
+                    </div>
 
                     {/* Wishlist Button */}
                     <button
@@ -125,7 +155,7 @@ const ProductDetailsClient = ({ product }: ProductDetailsClientProps) => {
                                 <img
                                     src={url}
                                     alt={`${productName} thumbnail ${index + 1}`}
-                                    className="h-full w-full object-cover"
+                                    className={`h-full w-full object-cover ${isOutOfStock ? 'grayscale' : ''}`}
                                 />
                             </button>
                         ))}
@@ -136,11 +166,22 @@ const ProductDetailsClient = ({ product }: ProductDetailsClientProps) => {
             {/* Product Details */}
             <div className="flex flex-col">
                 <div className="mb-6">
+                    {/* Brand Name */}
+                    {getLocalizedContent(product, 'brand_name') && (
+                        <p className="text-sm font-semibold text-primary mb-1 uppercase tracking-wider">
+                            {getLocalizedContent(product, 'brand_name')}
+                        </p>
+                    )}
                     <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-2 capitalize">{productName}</h1>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                        <svg className="w-4 h-4 flex-shrink-0 translate-y-[1px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-                        <Link href={`/store/${product.shop_id}`} className="text-sm font-medium hover:text-primary hover:underline transition-colors flex items-center">
-                            {shopName}
+                    <div className="flex items-center gap-3 text-muted-foreground flex-wrap">
+                        <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                            <span className="text-sm font-medium">{shopName}</span>
+                        </div>
+                        <span className="hidden sm:inline text-border">|</span>
+                        <Link href={`/store/${product.shop_id}`} className="text-sm font-medium text-primary hover:underline transition-colors flex items-center gap-1 group">
+                            <span>{t('visitStore') || 'Visit Store'}</span>
+                            <svg className="w-3 h-3 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                         </Link>
                     </div>
                 </div>
@@ -157,7 +198,14 @@ const ProductDetailsClient = ({ product }: ProductDetailsClientProps) => {
                             </>
                         )}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">{t('inclusiveTaxes')}</p>
+                    <div className="flex gap-4 items-center mt-1">
+                        <p className="text-sm text-muted-foreground">{t('inclusiveTaxes')}</p>
+                        {getLocalizedContent(product, 'unit') && (
+                            <span className="text-sm font-medium bg-secondary px-2 py-0.5 rounded text-secondary-foreground">
+                                {getLocalizedContent(product, 'unit')}
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 <div className="prose prose-sm text-muted-foreground mb-6">
@@ -165,48 +213,99 @@ const ProductDetailsClient = ({ product }: ProductDetailsClientProps) => {
                     <p>{productDescription || 'No description available for this product.'}</p>
                 </div>
 
-                {/* Quantity Selector */}
-                <div className="mb-6">
-                    <h3 className="text-sm font-semibold text-foreground mb-3">{t('quantity') || 'Quantity'}</h3>
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center border border-border rounded-xl bg-background overflow-hidden">
-                            <button
-                                onClick={decrementQuantity}
-                                className="p-3 hover:bg-muted transition-colors text-foreground disabled:opacity-50 cursor-pointer"
-                                disabled={quantity <= 1}
-                            >
-                                <Minus className="w-4 h-4" />
-                            </button>
-                            <input
-                                type="number"
-                                min="1"
-                                value={quantity}
-                                onChange={(e) => {
-                                    const val = parseInt(e.target.value);
-                                    if (!isNaN(val) && val > 0) setQuantity(val);
-                                    else if (e.target.value === '') setQuantity(1); // fallback or handle empty
-                                }}
-                                className="w-16 text-center font-bold text-lg border-x border-border bg-transparent focus:outline-none focus:ring-1 focus:ring-primary appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            />
-                            <button
-                                onClick={incrementQuantity}
-                                className="p-3 hover:bg-muted transition-colors text-foreground cursor-pointer"
-                            >
-                                <Plus className="w-4 h-4" />
-                            </button>
+                {/* Specifications Section */}
+                {(product.specifications || product.warranty_period || product.manufacturing_date || product.expiry_date) && (
+                    <div className="mb-6 border-t border-border pt-6">
+                        <h3 className="text-foreground font-semibold mb-4">{t('productDetails') || 'Product Details'}</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                            {/* Static Fields */}
+                            {product.warranty_period && (
+                                <div className="flex flex-col">
+                                    <span className="text-muted-foreground text-xs uppercase mb-1">{t('warranty')}</span>
+                                    <span className="font-medium text-foreground">{product.warranty_period}</span>
+                                </div>
+                            )}
+                            {product.manufacturing_date && (
+                                <div className="flex flex-col">
+                                    <span className="text-muted-foreground text-xs uppercase mb-1">{t('mfgDate')}</span>
+                                    <span className="font-medium text-foreground">
+                                        {new Date(product.manufacturing_date).toLocaleDateString(locale === 'ml' ? 'en-IN' : 'en-GB', { dateStyle: 'medium' })}
+                                    </span>
+                                </div>
+                            )}
+                            {product.expiry_date && (
+                                <div className="flex flex-col">
+                                    <span className="text-muted-foreground text-xs uppercase mb-1">{t('expiryDate')}</span>
+                                    <span className="font-medium text-foreground">
+                                        {new Date(product.expiry_date).toLocaleDateString(locale === 'ml' ? 'en-IN' : 'en-GB', { dateStyle: 'medium' })}
+                                    </span>
+                                </div>
+                            )}
+
+                            {/* Dynamic Specifications */}
+                            {product.specifications && Object.entries(product.specifications).map(([key, value]) => {
+                                if (key === 'hide_out_of_stock' || key === 'min_stock_alert') return null; // Skip internal flags
+                                if (!value) return null;
+                                // Clean up key
+                                const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                return (
+                                    <div key={key} className="flex flex-col">
+                                        <span className="text-muted-foreground text-xs uppercase mb-1">{label}</span>
+                                        <span className="font-medium text-foreground">{String(value)}</span>
+                                    </div>
+                                );
+                            })}
                         </div>
-                        <span className="text-muted-foreground text-sm">
-                            {t('total') || 'Total'}: <span className="font-bold text-foreground">{formatPrice(product.price * quantity)}</span>
-                        </span>
                     </div>
-                </div>
+                )}
+
+                {/* Quantity Selector */}
+                {!isOutOfStock && (
+                    <div className="mb-6">
+                        <h3 className="text-sm font-semibold text-foreground mb-3">{t('quantity') || 'Quantity'}</h3>
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center border border-border rounded-xl bg-background overflow-hidden">
+                                <button
+                                    onClick={decrementQuantity}
+                                    className="p-3 hover:bg-muted transition-colors text-foreground disabled:opacity-50 cursor-pointer"
+                                    disabled={quantity <= 1}
+                                >
+                                    <Minus className="w-4 h-4" />
+                                </button>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={quantity}
+                                    onChange={(e) => {
+                                        const val = parseInt(e.target.value);
+                                        if (!isNaN(val) && val > 0) setQuantity(val);
+                                        else if (e.target.value === '') setQuantity(1); // fallback or handle empty
+                                    }}
+                                    className="w-16 text-center font-bold text-lg border-x border-border bg-transparent focus:outline-none focus:ring-1 focus:ring-primary appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                />
+                                <button
+                                    onClick={incrementQuantity}
+                                    className="p-3 hover:bg-muted transition-colors text-foreground cursor-pointer"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <span className="text-muted-foreground text-sm">
+                                {t('total') || 'Total'}: <span className="font-bold text-foreground">{formatPrice(product.price * quantity)}</span>
+                            </span>
+                        </div>
+                    </div>
+                )}
 
                 <div className="mt-auto space-y-4">
                     {/* Add to Cart & Buy Now Row */}
                     <div className="flex flex-col sm:flex-row gap-3">
                         <button
                             onClick={handleAddToCart}
-                            className="flex-1 rounded-xl bg-slate-900 dark:bg-slate-100 px-6 py-3 text-base font-bold text-white dark:text-slate-900 shadow-md shadow-slate-900/10 hover:shadow-lg hover:shadow-slate-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 min-h-[3rem] cursor-pointer"
+                            disabled={isOutOfStock}
+                            className={`flex-1 rounded-xl px-6 py-3 text-base font-bold shadow-md transition-all flex items-center justify-center gap-2 min-h-[3rem] ${isOutOfStock
+                                ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-70 shadow-none'
+                                : 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-slate-900/10 hover:shadow-lg hover:shadow-slate-900/20 hover:scale-[1.02] active:scale-[0.98] cursor-pointer'}`}
                         >
                             {isAdded ? (
                                 <>
@@ -216,14 +315,19 @@ const ProductDetailsClient = ({ product }: ProductDetailsClientProps) => {
                             ) : (
                                 <>
                                     <ShoppingCart className="w-5 h-5 flex-shrink-0" />
-                                    <span>{t('addToCart')}</span>
+                                    <span>
+                                        {isOutOfStock ? ((t as any)('outOfStock') === 'outOfStock' ? 'Out of Stock' : (t as any)('outOfStock')) : t('addToCart')}
+                                    </span>
                                 </>
                             )}
                         </button>
 
                         <button
                             onClick={handleBuyNow}
-                            className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-3 text-base font-bold text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 min-h-[3rem] cursor-pointer"
+                            disabled={isOutOfStock}
+                            className={`flex-1 rounded-xl px-6 py-3 text-base font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 min-h-[3rem] ${isOutOfStock
+                                ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-50 shadow-none'
+                                : 'bg-gradient-to-r from-blue-600 to-indigo-700 shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] cursor-pointer'}`}
                         >
                             <Zap className="w-5 h-5 flex-shrink-0 fill-current" />
                             <span>{t('buyNow') || 'Buy Now'}</span>
@@ -239,7 +343,7 @@ const ProductDetailsClient = ({ product }: ProductDetailsClientProps) => {
                             })()}?text=${encodeURIComponent(t('inquireProductMsg', {
                                 shopName: shopName,
                                 productName: productName,
-                                link: typeof window !== 'undefined' ? window.location.href : ''
+                                link: currentUrl
                             }))}`}
                             target="_blank"
                             rel="noopener noreferrer"
