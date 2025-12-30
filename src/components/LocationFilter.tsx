@@ -36,22 +36,22 @@ export default function LocationFilter() {
             {/* Mobile: Compact chip/button that expands */}
             <div className="mobile-filter">
                 <button
-                    className="filter-toggle"
+                    className={`filter-toggle ${hasFilters ? 'has-filter' : ''}`}
                     onClick={() => setIsExpanded(!isExpanded)}
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="location-icon">
                         <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
                         <circle cx="12" cy="10" r="3" />
                     </svg>
                     <span className="filter-text">{getFilterDisplayText()}</span>
-                    <svg className={`chevron ${isExpanded ? 'open' : ''}`} xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className={`chevron ${isExpanded ? 'open' : ''}`} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="m6 9 6 6 6-6" />
                     </svg>
                 </button>
 
                 {hasFilters && (
                     <button onClick={clearAll} className="clear-icon" title="Clear filters">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
                             <line x1="6" y1="6" x2="18" y2="18"></line>
                         </svg>
@@ -235,23 +235,41 @@ export default function LocationFilter() {
                 .filter-toggle {
                     display: flex;
                     align-items: center;
-                    gap: 6px;
-                    padding: 6px 10px;
+                    gap: 8px;
+                    padding: 8px 14px;
                     border: 1px solid hsl(var(--border));
-                    border-radius: 20px;
+                    border-radius: 24px;
                     background: hsl(var(--background));
                     color: hsl(var(--foreground));
                     font-size: 13px;
+                    font-weight: 500;
                     cursor: pointer;
-                    transition: all 0.2s;
+                    transition: all 0.2s ease;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
                 }
 
                 .filter-toggle:hover {
                     border-color: hsl(var(--primary));
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                }
+
+                .filter-toggle.has-filter {
+                    background: hsl(var(--primary) / 0.1);
+                    border-color: hsl(var(--primary) / 0.3);
+                    color: hsl(var(--primary));
+                }
+
+                .filter-toggle.has-filter .location-icon {
+                    color: hsl(var(--primary));
+                }
+
+                .location-icon {
+                    color: hsl(var(--muted-foreground));
+                    flex-shrink: 0;
                 }
 
                 .filter-text {
-                    max-width: 150px;
+                    max-width: 140px;
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;
@@ -259,6 +277,8 @@ export default function LocationFilter() {
 
                 .chevron {
                     transition: transform 0.2s;
+                    opacity: 0.6;
+                    flex-shrink: 0;
                 }
 
                 .chevron.open {
@@ -271,11 +291,21 @@ export default function LocationFilter() {
                     justify-content: center;
                     width: 28px;
                     height: 28px;
-                    border: none;
+                    min-width: 28px;
+                    min-height: 28px;
+                    border: 1px solid hsl(var(--border));
                     border-radius: 50%;
-                    background: hsl(var(--destructive) / 0.1);
-                    color: hsl(var(--destructive));
+                    background: hsl(var(--background));
+                    color: hsl(var(--muted-foreground));
                     cursor: pointer;
+                    transition: all 0.2s ease;
+                    padding: 0;
+                }
+
+                .clear-icon:hover {
+                    background: hsl(var(--destructive) / 0.1);
+                    border-color: hsl(var(--destructive) / 0.3);
+                    color: hsl(var(--destructive));
                 }
 
                 /* Desktop filter row */
