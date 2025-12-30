@@ -38,6 +38,10 @@ interface GetServicesParams {
     search?: string;
     categoryId?: string;
     sortBy?: SortOption;
+    // Location filters
+    state?: string;
+    district?: string;
+    town?: string;
 }
 
 export async function getServices({
@@ -47,6 +51,9 @@ export async function getServices({
     search = '',
     categoryId = 'all',
     sortBy = 'newest',
+    state,
+    district,
+    town,
 }: GetServicesParams) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -65,7 +72,8 @@ export async function getServices({
                 longitude
             )
         `)
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .eq('hidden_by_admin', false);
 
     if (shopId) {
         query = query.eq('shop_id', shopId);
@@ -75,6 +83,15 @@ export async function getServices({
         query = query
             .eq('shops.is_verified', true)
             .eq('shops.is_hidden', false);
+
+        // Location filters
+        if (town) {
+            query = query.eq('shops.town', town);
+        } else if (district) {
+            query = query.eq('shops.district', district);
+        } else if (state) {
+            query = query.eq('shops.state', state);
+        }
     }
 
     // Category Filter
@@ -83,26 +100,48 @@ export async function getServices({
     }
 
     // Search
-    if (search) {
-        let orClause = `name.ilike.%${search}%,description.ilike.%${search}%`;
+    if (search && search.trim().length > 0) {
+        const { data, error } = await supabase.rpc('search_services', {
+            search_term: search,
+            p_limit: limit,
+            p_offset: from,
+            p_shop_id: shopId || null,
+            p_category_id: categoryId !== 'all' ? categoryId : null,
+            p_sort_by: sortBy
+        });
 
-        // Search in Service Categories
-        // First find matching category IDs
-        const { data: catData } = await supabase
-            .from('service_categories')
-            .select('id')
-            .or(`name.ilike.%${search}%,name_ml.ilike.%${search}%`);
-
-        if (catData && catData.length > 0) {
-            const catIds = catData.map(c => `category_id.eq.${c.id}`).join(',');
-            if (catIds) {
-                // Supabase OR with multiple ID eqs is valid: id.eq.1,id.eq.2
-                // Append to the orClause
-                orClause += `,${catIds}`;
-            }
+        if (error) {
+            console.error('Error in search_services RPC:', error);
+            throw new Error('Failed to search services');
         }
 
-        query = query.or(orClause);
+        const mappedServices = (data as any[]).map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            description: item.description,
+            price: item.price,
+            image_urls: item.image_urls,
+            name_ml: item.name_ml,
+            description_ml: item.description_ml,
+            is_active: item.is_active,
+            created_at: item.created_at,
+            shop_id: item.shop_id,
+            duration_minutes: item.duration_minutes,
+            shop: {
+                id: item.shop_id,
+                name: item.shop_name,
+                whatsapp_number: item.shop_whatsapp,
+                logo_url: item.shop_logo,
+                city: item.shop_city,
+                latitude: item.shop_latitude,
+                longitude: item.shop_longitude
+            }
+        }));
+
+        return {
+            services: mappedServices as Service[],
+            hasMore: mappedServices.length === limit,
+        };
     }
 
     // Sort

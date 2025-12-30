@@ -6,6 +6,7 @@ import { LanguageProvider } from "../context/LanguageContext";
 import { LocationProvider } from "../context/LocationContext";
 import { CartProvider } from "../context/CartContext";
 import { WishlistProvider } from "../context/WishlistContext";
+import { LocationFilterProvider } from "../context/LocationFilterContext";
 import ProfileCompletionCheck from "@/components/ProfileCompletionCheck";
 import InstallPrompt from "@/components/InstallPrompt";
 
@@ -44,13 +45,15 @@ export default function RootLayout({
         >
           <LanguageProvider>
             <LocationProvider>
-              <WishlistProvider>
-                <CartProvider>
-                  <ProfileCompletionCheck />
-                  <InstallPrompt />
-                  {children}
-                </CartProvider>
-              </WishlistProvider>
+              <LocationFilterProvider>
+                <WishlistProvider>
+                  <CartProvider>
+                    <ProfileCompletionCheck />
+                    <InstallPrompt />
+                    {children}
+                  </CartProvider>
+                </WishlistProvider>
+              </LocationFilterProvider>
             </LocationProvider>
           </LanguageProvider>
         </ThemeProvider>

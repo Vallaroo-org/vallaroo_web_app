@@ -13,6 +13,9 @@ import { useLocation } from '../context/LocationContext';
 import LocationDialog from './LocationDialog';
 import { useWishlist } from '../context/WishlistContext';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { getSearchSuggestions, type SearchSuggestion } from '../app/actions/get-search-suggestions';
+import LocationFilter from './LocationFilter';
+import { useLocationFilter } from '../context/LocationFilterContext';
 
 // Wishlist Icon with badge
 const WishlistIcon = () => {
@@ -48,18 +51,55 @@ const CartIcon = () => {
   );
 };
 
-const SearchBar = ({ className }: { className?: string }) => {
+const SearchBar = ({ className, currentTheme }: { className?: string; currentTheme?: string }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get('search') || '');
   const { t } = useLanguage();
+  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchContainerRef = useRef<HTMLFormElement>(null);
+  const { selectedState, selectedDistrict, selectedTown } = useLocationFilter();
 
   useEffect(() => {
     setQuery(searchParams.get('search') || '');
   }, [searchParams]);
 
+  // Handle click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Fetch suggestions with debounce
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (query.trim().length >= 2) {
+        const results = await getSearchSuggestions(query, {
+          state: selectedState || undefined,
+          district: selectedDistrict || undefined,
+          town: selectedTown || undefined,
+        });
+        setSuggestions(results);
+        setShowSuggestions(true);
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [query, selectedState, selectedDistrict, selectedTown]);
+
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowSuggestions(false);
     const params = new URLSearchParams(searchParams.toString());
     if (query.trim()) {
       params.set('search', query.trim());
@@ -69,14 +109,34 @@ const SearchBar = ({ className }: { className?: string }) => {
     router.push(`/?${params.toString()}`);
   };
 
+  const handleSuggestionClick = (s: SearchSuggestion) => {
+    setShowSuggestions(false);
+    if (s.type === 'product') {
+      router.push(`/product/${s.id}`);
+    } else if (s.type === 'service') {
+      router.push(`/service/${s.id}`); // Assuming service details page exists
+    } else if (s.type === 'shop') {
+      router.push(`/store/${s.id}`);
+    } else {
+      // Category or other - perform search
+      setQuery(s.name);
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('search', s.name);
+      router.push(`/?${params.toString()}`);
+    }
+  };
+
   return (
-    <form onSubmit={handleSearch} className={`relative ${className}`}>
+    <form ref={searchContainerRef} onSubmit={handleSearch} className={`relative ${className}`}>
       <input
         type="text"
-        placeholder={t('searchExample') || "Search for products..."}
+        placeholder={t('searchExample') || "Search for products, services, shops, categories..."}
         className="w-full pl-4 pr-16 py-2 rounded-full border border-border bg-muted/50 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all outline-none"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        onFocus={() => {
+          if (suggestions.length > 0) setShowSuggestions(true);
+        }}
         maxLength={50}
       />
       {query && (
@@ -84,6 +144,7 @@ const SearchBar = ({ className }: { className?: string }) => {
           type="button"
           onClick={() => {
             setQuery('');
+            setSuggestions([]);
             const params = new URLSearchParams(searchParams.toString());
             params.delete('search');
             router.push(`/?${params.toString()}`);
@@ -99,6 +160,41 @@ const SearchBar = ({ className }: { className?: string }) => {
       >
         <Search className="w-4 h-4" />
       </button>
+
+      {/* Suggestions Dropdown */}
+      {showSuggestions && suggestions.length > 0 && (
+        <div className={`absolute top-full left-0 w-full mt-2 rounded-xl border border-border shadow-xl overflow-hidden z-[60] animate-in fade-in slide-in-from-top-2 ${currentTheme === 'dark' ? 'bg-neutral-900 text-neutral-100' : 'bg-white text-neutral-900'}`}>
+          <div className="max-h-[60vh] overflow-y-auto py-1">
+            {suggestions.map((item) => (
+              <div
+                key={`${item.type}-${item.id}`}
+                onClick={() => handleSuggestionClick(item)}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-secondary/50 cursor-pointer transition-colors border-b last:border-0 border-border/40"
+              >
+                {/* Icon/Image */}
+                <div className="flex-shrink-0 w-8 h-8 rounded-md bg-muted flex items-center justify-center overflow-hidden">
+                  {item.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                  ) : (
+                    // Fallback Icons based on type
+                    item.type === 'shop' ? <MapPin className="w-4 h-4 opacity-50" /> :
+                      item.type === 'product' ? <ShoppingCart className="w-4 h-4 opacity-50" /> :
+                        <Search className="w-4 h-4 opacity-50" />
+                  )}
+                </div>
+
+                <div className="flex flex-col flex-1 min-w-0">
+                  <span className="font-medium truncate text-sm">{item.name}</span>
+                  <span className="text-xs text-muted-foreground truncate capitalize">
+                    {item.type} {item.sub_text ? `• ${item.sub_text}` : ''}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </form>
   );
 }
@@ -197,7 +293,7 @@ const NavbarContent = () => {
             </button>
 
             {/* Search Bar - Takes remaining space */}
-            <SearchBar className="flex-1" />
+            <SearchBar className="flex-1" currentTheme={resolvedTheme} />
           </div>
 
           {/* Right Side: Desktop Actions */}
@@ -240,8 +336,11 @@ const NavbarContent = () => {
 
         {/* Mobile Search Bar Row */}
         <div className="md:hidden border-t border-border/40 px-4 py-2 bg-background/50">
-          <SearchBar />
+          <SearchBar currentTheme={resolvedTheme} />
         </div>
+
+        {/* Location Filter Row */}
+        <LocationFilter />
 
         {/* Mobile Menu & Backdrop */}
         {isMenuOpen && (

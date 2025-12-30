@@ -45,6 +45,7 @@ export async function getProduct(productId: string): Promise<ProductDetail | nul
         `)
         .eq('id', productId)
         .eq('is_active', true)
+        .eq('hidden_by_admin', false)
         .eq('shops.is_hidden', false)
         .eq('shops.is_verified', true)
         .eq('shops.businesses.is_hidden', false)

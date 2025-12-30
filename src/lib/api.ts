@@ -17,6 +17,7 @@ export interface Shop {
     delivery_time?: string; // Not in DB yet
     latitude?: number;
     longitude?: number;
+    open_days?: string[];
 }
 
 export interface Product {
@@ -43,6 +44,7 @@ export const fetchShops = async (limit = 20): Promise<Shop[]> => {
         .from('shops')
         .select('*, businesses!inner(is_hidden)')
         .eq('is_hidden', false)
+        .eq('hidden_by_admin', false)
         .eq('is_verified', true)
         .filter('businesses.is_hidden', 'eq', false)
         .order('created_at', { ascending: false })
@@ -62,6 +64,7 @@ export const fetchShop = async (id: string): Promise<Shop | null> => {
         .select('*, businesses!inner(is_hidden)')
         .eq('id', id)
         .eq('is_hidden', false)
+        .eq('hidden_by_admin', false)
         .eq('is_verified', true)
         .filter('businesses.is_hidden', 'eq', false)
         .single();
@@ -98,6 +101,7 @@ export const fetchProducts = async (limit = 20): Promise<Product[]> => {
                 businesses!inner(is_hidden)
             )
         `)
+        .eq('hidden_by_admin', false)
         .eq('shops.is_hidden', false)
         .eq('shops.is_verified', true)
         .filter('shops.businesses.is_hidden', 'eq', false)
@@ -127,6 +131,7 @@ export const fetchProduct = async (id: string): Promise<Product | null> => {
             )
         `)
         .eq('id', id)
+        .eq('hidden_by_admin', false)
         .eq('shops.is_hidden', false)
         .eq('shops.is_verified', true)
         .filter('shops.businesses.is_hidden', 'eq', false)

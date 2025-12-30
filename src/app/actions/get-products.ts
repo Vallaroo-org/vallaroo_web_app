@@ -48,6 +48,10 @@ interface GetProductsParams {
     category?: string; // Shop specific category ID
     globalCategory?: string; // High level global category
     sortBy?: SortOption;
+    // Location filters
+    state?: string;
+    district?: string;
+    town?: string;
 }
 
 export async function getProducts({
@@ -58,10 +62,98 @@ export async function getProducts({
     category = 'all',
     globalCategory = 'all',
     sortBy = 'newest',
+    state,
+    district,
+    town,
 }: GetProductsParams) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
+    // Use RPC for search if search term is present
+    if (search && search.trim().length > 0) {
+        let globalCategoryId: string | null = null;
+        let subCategoryId: string | null = null;
+
+        // Resolve IDs for filters if needed (similar logic to below)
+        if (globalCategory && globalCategory !== 'all') {
+            const { data: catData } = await supabase
+                .from('product_categories')
+                .select('id')
+                .ilike('name', globalCategory)
+                .single();
+            if (catData?.id) globalCategoryId = catData.id;
+        }
+
+        if (category && category !== 'all') {
+            if (category.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+                subCategoryId = category;
+            } else {
+                const { data: subData } = await supabase
+                    .from('product_sub_categories')
+                    .select('id')
+                    .ilike('name', category)
+                    .single();
+                if (subData?.id) subCategoryId = subData.id;
+            }
+        }
+
+        const { data, error } = await supabase.rpc('search_products', {
+            search_term: search,
+            p_limit: limit,
+            p_offset: from,
+            p_shop_id: shopId || null,
+            p_category_id: subCategoryId,
+            p_global_category_id: globalCategoryId,
+            p_sort_by: sortBy
+        });
+
+        if (error) {
+            console.error('Error in search_products RPC:', error);
+            throw new Error('Failed to search products');
+        }
+
+        // Map RPC result to Product interface
+        // RPC returns flat structure with shop_ prefix for shop details
+        const mappedProducts = (data as any[]).map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            name_ml: item.name_ml,
+            price: item.price,
+            mrp: item.mrp,
+            description: item.description,
+            description_ml: item.description_ml,
+            image_urls: item.image_urls,
+            category_id: item.category_id,
+            global_category: item.global_category,
+            global_category_id: item.global_category_id,
+            is_active: item.is_active,
+            created_at: item.created_at,
+            stock: item.stock,
+            specifications: item.specifications,
+            shop_id: item.shop_id,
+            shops: {
+                id: item.shop_id,
+                name: item.shop_name,
+                name_ml: item.shop_name_ml,
+                phone_number: item.shop_phone,
+                logo_url: item.shop_logo,
+                latitude: item.shop_latitude,
+                longitude: item.shop_longitude,
+                is_verified: item.shop_is_verified,
+                is_hidden: item.shop_is_hidden
+            },
+            // Legacy/helper fields
+            category: item.category_id,
+        }));
+
+        return {
+            products: mappedProducts as Product[],
+            // Simplistic pagination check for now. RPC could return total count if improved.
+            hasMore: mappedProducts.length === limit,
+        };
+    }
+
+    // ORIGINAL LOGIC (No Search Term)
     // Select fields - include shops join for global view
     const selectFields = shopId
         ? 'id, name, name_ml, price, mrp, description, description_ml, image_urls, category_id, global_category, global_category_id, is_active, created_at, stock, specifications'
@@ -70,7 +162,8 @@ export async function getProducts({
     let query = supabase
         .from('products')
         .select(selectFields)
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .eq('hidden_by_admin', false);
 
     // Filter by shop only if shopId is provided
     if (shopId) {
@@ -80,12 +173,15 @@ export async function getProducts({
         query = query
             .eq('shops.is_verified', true)
             .eq('shops.is_hidden', false);
-    }
 
-    // Search
-    if (search) {
-        // Search in English or Malayalam name, description, or global category
-        query = query.or(`name.ilike.%${search}%,name_ml.ilike.%${search}%,description.ilike.%${search}%,global_category.ilike.%${search}%`);
+        // Location filters
+        if (town) {
+            query = query.eq('shops.town', town);
+        } else if (district) {
+            query = query.eq('shops.district', district);
+        } else if (state) {
+            query = query.eq('shops.state', state);
+        }
     }
 
     // Sub-Category Filter (previously 'category' param)

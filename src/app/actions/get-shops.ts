@@ -18,6 +18,7 @@ export interface Shop {
     latitude?: number;
     longitude?: number;
     created_at?: string;
+    open_days?: string[];
 }
 
 export type ShopSortOption = 'newest' | 'name_asc';
@@ -28,6 +29,10 @@ interface GetShopsParams {
     search?: string;
     categoryId?: string;
     sortBy?: ShopSortOption;
+    // Location filters
+    state?: string;
+    district?: string;
+    town?: string;
 }
 
 export async function getShops({
@@ -36,6 +41,9 @@ export async function getShops({
     search = '',
     categoryId = 'all',
     sortBy = 'newest',
+    state,
+    district,
+    town,
 }: GetShopsParams = {}) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -43,9 +51,19 @@ export async function getShops({
     // Select only columns that exist in the shops table
     let query = supabase
         .from('shops')
-        .select('id, name, name_ml, city, city_ml, cover_image_url, logo_url, phone_number, latitude, longitude, created_at, category_id')
+        .select('id, name, name_ml, city, city_ml, cover_image_url, logo_url, phone_number, latitude, longitude, created_at, category_id, open_days, state, district, town')
         .eq('is_hidden', false)
+        .eq('hidden_by_admin', false)
         .eq('is_verified', true);
+
+    // Location filters
+    if (town) {
+        query = query.eq('town', town);
+    } else if (district) {
+        query = query.eq('district', district);
+    } else if (state) {
+        query = query.eq('state', state);
+    }
 
     // Category Filter
     if (categoryId && categoryId !== 'all') {
@@ -53,24 +71,44 @@ export async function getShops({
     }
 
     // Search
-    if (search) {
-        let orClause = `name.ilike.%${search}%,name_ml.ilike.%${search}%,city.ilike.%${search}%`;
+    if (search && search.trim().length > 0) {
+        const { data, error } = await supabase.rpc('search_shops', {
+            search_term: search,
+            p_limit: limit,
+            p_offset: from,
+            p_category_id: categoryId !== 'all' ? categoryId : null,
+            p_sort_by: sortBy
+        });
 
-        // Search in Shop Categories
-        // First find matching category IDs
-        const { data: catData } = await supabase
-            .from('shop_categories')
-            .select('id')
-            .or(`name.ilike.%${search}%,name_ml.ilike.%${search}%`);
-
-        if (catData && catData.length > 0) {
-            const catIds = catData.map(c => `category_id.eq.${c.id}`).join(',');
-            if (catIds) {
-                orClause += `,${catIds}`;
-            }
+        if (error) {
+            console.error('Error in search_shops RPC:', error);
+            // Fallback or empty? Usually better to return empty than crash
+            return {
+                shops: [],
+                hasMore: false,
+            };
         }
 
-        query = query.or(orClause);
+        const mappedShops = (data as any[]).map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            name_ml: item.name_ml,
+            city: item.city,
+            city_ml: item.city_ml,
+            cover_image_url: item.cover_image_url,
+            logo_url: item.logo_url,
+            phone_number: item.phone_number,
+            latitude: item.latitude,
+            longitude: item.longitude,
+            created_at: item.created_at,
+            category_id: item.category_id,
+            open_days: item.open_days
+        }));
+
+        return {
+            shops: mappedShops as Shop[],
+            hasMore: mappedShops.length === limit,
+        };
     }
 
     // Filter by type (if utilizing shop_type column 'product' | 'service' | 'both')

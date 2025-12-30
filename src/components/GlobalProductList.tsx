@@ -151,8 +151,19 @@ const GlobalProductCard = ({ product, className = "" }: { product: Product, clas
                     </div>
 
                     {/* Distance Badge */}
+                    {/* Distance Badge */}
                     {product.distance && (
-                        <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md text-white text-[10px] sm:text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 font-medium z-10 border border-white/10">
+                        <div
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (product.shops?.latitude && product.shops?.longitude) {
+                                    window.open(`https://www.google.com/maps/search/?api=1&query=${product.shops.latitude},${product.shops.longitude}`, '_blank');
+                                }
+                            }}
+                            className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md text-white text-[10px] sm:text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 font-medium z-10 border border-white/10 cursor-pointer hover:bg-black/80 transition-colors"
+                            title="View on Google Maps"
+                        >
                             <MapPin className="w-3 h-3 text-primary" />
                             <span>{product.distance} km</span>
                         </div>
@@ -210,16 +221,47 @@ const GlobalProductCard = ({ product, className = "" }: { product: Product, clas
 // Component for a horizontal scrolling section
 const CategorySection = ({
     category,
-    onViewAll
+    onViewAll,
+    index
 }: {
     category: string;
     onViewAll: (category: string) => void;
+    index: number;
 }) => {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
+    // Initially true for first 2 sections (above fold), false for others
+    const [shouldFetch, setShouldFetch] = useState(index < 2);
     const { latitude, longitude } = useLocation();
+    const sectionRef = useRef<HTMLDivElement>(null);
+
+    // Intersection Observer for Lazy Loading
+    useEffect(() => {
+        if (shouldFetch) return; // Already fetching/fetched
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting) {
+                    setShouldFetch(true);
+                    observer.disconnect();
+                }
+            },
+            {
+                rootMargin: '200px', // Fetch when 200px away from viewport
+                threshold: 0.1
+            }
+        );
+
+        if (sectionRef.current) {
+            observer.observe(sectionRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [shouldFetch]);
 
     useEffect(() => {
+        if (!shouldFetch) return;
+
         const fetchSectionProducts = async () => {
             try {
                 // Fetch limited items (e.g. 5) for this category
@@ -269,10 +311,15 @@ const CategorySection = ({
         };
 
         fetchSectionProducts();
-    }, [category, latitude, longitude]);
+    }, [category, latitude, longitude, shouldFetch]);
+
+    if (!shouldFetch) {
+        // Render a placeholder with min-height to allow intersection
+        return <div ref={sectionRef} className="py-8 min-h-[300px]" />;
+    }
 
     if (loading) return (
-        <div className="py-6 space-y-4">
+        <div ref={sectionRef} className="py-6 space-y-4 min-h-[300px]">
             <div className="h-8 bg-muted rounded w-32 animate-pulse"></div>
             <div className="flex gap-4 overflow-hidden">
                 {[1, 2, 3, 4].map(i => (
@@ -285,7 +332,7 @@ const CategorySection = ({
     if (products.length === 0) return null;
 
     return (
-        <section className="py-8 border-b border-border/40 last:border-0">
+        <section className="py-8 border-b border-border/40 last:border-0 animate-in fade-in duration-700">
             <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold tracking-tight">{category}</h2>
                 <button
@@ -627,11 +674,12 @@ const GlobalProductList = ({ initialProducts = [], searchMode = false, title }: 
                         // SECTIONS VIEW (Airbnb Style)
                         <div className="space-y-4">
                             {/* Only show categories that we fetched */}
-                            {categories.map(cat => (
+                            {categories.map((cat, index) => (
                                 <CategorySection
                                     key={cat.id}
                                     category={cat.name}
                                     onViewAll={handleViewAll}
+                                    index={index}
                                 />
                             ))}
 

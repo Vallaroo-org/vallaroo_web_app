@@ -6,7 +6,7 @@ export const ml = {
     services: "സേവനങ്ങൾ",
     offers: "ഓഫറുകൾ",
     shops: "കടകൾ",
-    searchExample: "ഉൽപ്പന്നങ്ങൾ തിരയുക...",
+    searchExample: "ഉൽപ്പന്നങ്ങൾ, സേവനങ്ങൾ, കടകൾ, വിഭാഗങ്ങൾ എന്നിവ തിരയുക...",
     changeLocation: "സ്ഥലം മാറ്റുക",
     currentLocation: "ഇപ്പോഴത്തെ സ്ഥലം",
     enterCity: "നഗരം / സ്ഥലം നൽകുക",
@@ -214,4 +214,15 @@ export const ml = {
     verifySubtitle: "ഞങ്ങൾ ഒരു പരിശോധനാ ഇമെയിൽ അയച്ചിട്ടുണ്ട്",
     verifyInstruction: "ദയവായി നിങ്ങളുടെ ഇൻബോക്സ് പരിശോധിച്ച് അക്കൗണ്ട് സജീവമാക്കാൻ ലിങ്കിൽ ക്ലിക്കുചെയ്യുക.",
     backToLogin: "ലോഗിനിലേക്ക് മടങ്ങുക",
+
+    // Open Days
+    openDays: "പ്രവർത്തിക്കുന്ന ദിവസങ്ങൾ",
+    everyday: "എല്ലാ ദിവസവും",
+    monday: "തിങ്കൾ",
+    tuesday: "ചൊവ്വ",
+    wednesday: "ബുധൻ",
+    thursday: "വ്യാഴം",
+    friday: "വെള്ളി",
+    saturday: "ശനി",
+    sunday: "ഞായർ",
 };

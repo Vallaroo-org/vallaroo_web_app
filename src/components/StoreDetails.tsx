@@ -69,6 +69,40 @@ export default function StoreDetails({ store }: { store: any }) {
             </div>
           )}
 
+          {/* Open Days */}
+          {store.open_days && store.open_days.length > 0 && (
+            <div>
+              <h3 className="font-semibold text-foreground mb-1">{t('openDays')}</h3>
+              <div className="flex items-start gap-2 text-muted-foreground">
+                <svg className="w-4 h-4 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                <span className="leading-relaxed">
+                  {(() => {
+                    if (store.open_days.length === 7) {
+                      return t('everyday');
+                    }
+                    // Map english days to keys
+                    const dayMap: { [key: string]: string } = {
+                      'monday': 'monday',
+                      'tuesday': 'tuesday',
+                      'wednesday': 'wednesday',
+                      'thursday': 'thursday',
+                      'friday': 'friday',
+                      'saturday': 'saturday',
+                      'sunday': 'sunday'
+                    };
+
+                    return store.open_days
+                      .map((day: string) => {
+                        const key = dayMap[day.toLowerCase()];
+                        return key ? (t as any)(key) || day : day;
+                      })
+                      .join(', ');
+                  })()}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Service Options */}
           {(store.delivery_available || store.takeaway_available) && (
             <div>

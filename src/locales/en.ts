@@ -6,7 +6,7 @@ export const en = {
   services: "Services",
   offers: "Offers",
   shops: "Shops",
-  searchExample: "Search for products...",
+  searchExample: "Search for products, services, shops, categories...",
   changeLocation: "Change Location",
   currentLocation: "Current Location",
   enterCity: "Enter City / Area",
@@ -214,4 +214,15 @@ export const en = {
   verifySubtitle: "We have sent a verification email to",
   verifyInstruction: "Please check your inbox and click the link to activate your account.",
   backToLogin: "Back to Login",
+
+  // Open Days
+  openDays: "Open Days",
+  everyday: "Everyday",
+  monday: "Monday",
+  tuesday: "Tuesday",
+  wednesday: "Wednesday",
+  thursday: "Thursday",
+  friday: "Friday",
+  saturday: "Saturday",
+  sunday: "Sunday",
 };
