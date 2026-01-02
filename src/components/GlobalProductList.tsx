@@ -86,7 +86,6 @@ const GlobalProductCard = ({ product, className = "" }: { product: Product, clas
         if (navigator.share) {
             navigator.share({
                 title: productName,
-                title: productName,
                 text: t('shareMsg')?.replace('{name}', productName) || `Check out ${productName} on Vallaroo!`,
                 url: url,
             }).catch(console.error);
