@@ -11,7 +11,7 @@ import { X, Navigation, Search } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useLocation } from '../context/LocationContext';
 import AdBanner from '../components/AdBanner';
-import CategoryIconGrid from '../components/CategoryIconGrid';
+
 import { useSearchParams } from 'next/navigation';
 
 import { getProducts } from './actions/get-products';
