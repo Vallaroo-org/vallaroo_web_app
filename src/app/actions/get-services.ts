@@ -96,7 +96,27 @@ export async function getServices({
 
     // Category Filter
     if (categoryId && categoryId !== 'all') {
-        query = query.eq('category_id', categoryId);
+        // Check if categoryId is a valid UUID
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryId);
+
+        if (isUUID) {
+            query = query.eq('category_id', categoryId);
+        } else {
+            // It's likely a category name from the URL, resolve to ID
+            const { data: catData } = await supabase
+                .from('service_categories')
+                .select('id')
+                .ilike('name', categoryId)
+                .single();
+
+            if (catData?.id) {
+                query = query.eq('category_id', catData.id);
+            } else {
+                console.warn(`Service category not found: ${categoryId}`);
+                // Return no results if category name is invalid
+                query = query.eq('category_id', '00000000-0000-0000-0000-000000000000');
+            }
+        }
     }
 
     // Search

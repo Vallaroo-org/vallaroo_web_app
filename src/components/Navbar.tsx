@@ -7,7 +7,7 @@ import { useEffect, useState, useRef, Suspense } from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useLanguage } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
-import { ShoppingCart, User, LogIn, MapPin, Heart, Search, X } from 'lucide-react';
+import { ShoppingCart, User, LogIn, MapPin, Heart, Search, X, Package, Wrench, Store, ChevronDown } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useLocation } from '../context/LocationContext';
 import LocationDialog from './LocationDialog';
@@ -15,6 +15,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { getSearchSuggestions, type SearchSuggestion } from '../app/actions/get-search-suggestions';
 import LocationFilter from './LocationFilter';
+import StickyCategoryBar from './StickyCategoryBar';
 import { useLocationFilter } from '../context/LocationFilterContext';
 
 // Wishlist Icon with badge
@@ -207,9 +208,43 @@ const NavbarContent = () => {
   const [showLocationDialog, setShowLocationDialog] = useState(false);
 
   const { placeName } = useLocation();
+  const [isScrolled, setIsScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<any>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isHomePage = pathname === '/';
+
+  // Tab state from URL
+  const currentTab = (searchParams.get('tab') as 'products' | 'services' | 'shops') || 'products';
+
+  // Location filter state
+  const {
+    selectedState,
+    selectedDistrict,
+    selectedTown,
+    states,
+    districts,
+    towns,
+    isLoadingTowns,
+    setSelectedState,
+    setSelectedDistrict,
+    setSelectedTown,
+  } = useLocationFilter();
+
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+
+  const handleTabChange = (tab: 'products' | 'services' | 'shops') => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === 'products') {
+      params.delete('tab');
+    } else {
+      params.set('tab', tab);
+    }
+    router.push(`/?${params.toString()}`, { scroll: false });
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -255,10 +290,20 @@ const NavbarContent = () => {
     };
   }, [isMenuOpen]);
 
+  // Handle scroll for sticky header animation
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <>
-      <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 max-w-screen-2xl items-center gap-4 mx-auto px-4">
+      <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300">
+        <div className={`container flex max-w-screen-2xl items-center gap-4 mx-auto px-4 transition-all duration-300 ease-in-out ${isScrolled ? 'h-0 opacity-0 overflow-hidden py-0 md:h-16 md:opacity-100 md:visible md:py-0' : 'h-16 opacity-100'}`}>
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 flex-shrink-0">
             {mounted ? (
@@ -298,7 +343,6 @@ const NavbarContent = () => {
 
           {/* Right Side: Desktop Actions */}
           <div className="hidden md:flex items-center space-x-3 lg:space-x-4 flex-shrink-0">
-
             <LanguageSwitcher />
             <ThemeToggle />
             <WishlistIcon />
@@ -339,65 +383,52 @@ const NavbarContent = () => {
           <SearchBar currentTheme={resolvedTheme} />
         </div>
 
-        {/* Location Filter Row */}
-        <LocationFilter />
-
-        {/* Mobile Menu & Backdrop */}
+        {/* Mobile Menu Content */}
         {isMenuOpen && (
-          <>
-            {/* Backdrop to close menu when clicking outside - Covers entire screen */}
-            <div
-              className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-[2px] md:hidden"
-              onClick={() => setIsMenuOpen(false)}
-              aria-hidden="true"
-            />
+          <div ref={menuRef} style={{ backgroundColor: resolvedTheme === 'dark' ? '#000000' : '#ffffff' }} className="absolute top-full left-0 right-0 border-b border-border p-4 md:hidden shadow-xl animate-in fade-in slide-in-from-top-2 flex flex-col gap-2 max-h-[80vh] overflow-y-auto z-50">
+            {user ? (
+              <Link
+                href="/profile"
+                className="flex items-center gap-3 p-3 hover:bg-accent rounded-lg transition-colors text-foreground"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <User className="w-5 h-5" />
+                <span className="font-medium">{t('profile') || 'My Profile'}</span>
+              </Link>
+            ) : (
+              <Link
+                href="/signin"
+                className="flex items-center gap-3 p-3 hover:bg-accent rounded-lg transition-colors text-foreground"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <LogIn className="w-5 h-5" />
+                <span className="font-medium">{t('signIn')}</span>
+              </Link>
+            )}
 
-            {/* Menu Content */}
-            <div
-              ref={menuRef}
-              className={`md:hidden fixed left-0 top-16 w-full border-b border-border px-4 py-6 space-y-6 shadow-xl animate-in slide-in-from-top-2 z-[101] ${resolvedTheme === 'dark' ? 'bg-black text-white' : 'bg-white text-black'
-                }`}>
-              <div className="space-y-4">
-                {/* Mobile Location Button */}
-                <button
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    setShowLocationDialog(true);
-                  }}
-                  className="flex w-full items-center gap-2 px-4 py-3 rounded-md bg-secondary/50 text-foreground border border-border"
-                >
-                  <MapPin className="w-5 h-5 text-primary" />
-                  <span className="font-medium truncate">
-                    {placeName || t('selectLocation')}
-                  </span>
-                </button>
+            <div className="h-px bg-border/50 my-2" />
 
-                {/* Discover Link Removed */}
-
-                <Link
-                  href={user ? "/profile" : "/signin"}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex w-full items-center gap-2 px-4 py-3 text-base font-medium hover:bg-accent rounded-md active:bg-accent/80 transition-colors"
-                >
-                  {user ? <User className="w-5 h-5 flex-shrink-0" /> : <LogIn className="w-5 h-5 flex-shrink-0" />}
-                  <span>{user ? t('myProfile') : t('signIn')}</span>
-                </Link>
-              </div>
-
-              <div className="pt-4 border-t border-border flex items-center justify-between px-2">
-                <span className="text-sm font-medium text-muted-foreground">{t('settings')}</span>
-                <div className="flex gap-4">
-                  <ThemeToggle />
-                  <LanguageSwitcher />
-                </div>
-              </div>
+            <div className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors">
+              <span className="font-medium text-sm">Theme</span>
+              <ThemeToggle />
             </div>
-          </>
+
+            <div className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors">
+              <span className="font-medium text-sm">Language</span>
+              <LanguageSwitcher />
+            </div>
+          </div>
         )}
-      </nav>
+      </nav >
+
+      {/* Location Filter Row - Mobile only - Moved outside sticky nav to scroll away */}
+      < LocationFilter />
+
+      {/* Sticky Category Bar - Desktop - Moved outside sticky nav to scroll away */}
+      < StickyCategoryBar />
 
       {/* Location Dialog Component */}
-      <LocationDialog
+      < LocationDialog
         isOpen={showLocationDialog}
         onClose={() => setShowLocationDialog(false)}
       />

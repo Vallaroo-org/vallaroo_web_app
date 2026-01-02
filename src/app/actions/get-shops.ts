@@ -67,7 +67,25 @@ export async function getShops({
 
     // Category Filter
     if (categoryId && categoryId !== 'all') {
-        query = query.eq('category_id', categoryId);
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryId);
+
+        if (isUUID) {
+            query = query.eq('category_id', categoryId);
+        } else {
+            // Resolve category name to ID
+            const { data: catData } = await supabase
+                .from('shop_categories')
+                .select('id')
+                .ilike('name', categoryId)
+                .single();
+
+            if (catData?.id) {
+                query = query.eq('category_id', catData.id);
+            } else {
+                // Name not found, return empty
+                query = query.eq('category_id', '00000000-0000-0000-0000-000000000000');
+            }
+        }
     }
 
     // Search

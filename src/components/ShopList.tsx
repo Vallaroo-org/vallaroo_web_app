@@ -3,12 +3,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Search, Filter, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { getShops, type Shop as ActionShop, type ShopSortOption } from '../app/actions/get-shops';
-import { getShopCategories, type ShopCategory } from '../app/actions/get-shop-categories';
 import { useLocation } from '../context/LocationContext';
-import { getDrivingDistances, type DistanceResult } from '../lib/locationService';
+import { getDrivingDistances } from '../lib/locationService';
 
 interface Shop extends ActionShop {
     distance?: string;
@@ -114,12 +113,13 @@ function useDebounce<T>(value: T, delay: number): T {
 
 const ShopList = ({ initialShops = [], searchMode = false, title }: ShopListProps) => {
     const [shops, setShops] = useState<Shop[]>(initialShops);
-    const [categories, setCategories] = useState<ShopCategory[]>([]);
-    const [selectedCategory, setSelectedCategory] = useState('all');
-    // const [searchTerm, setSearchTerm] = useState(''); // REMOVED
+    // Removed duplicate Categories state/UI logic
+    // Removed Sort UI logic
+
     const searchParams = useSearchParams();
     const urlSearchTerm = searchParams.get('search') || '';
-    const [sortBy, setSortBy] = useState<ShopSortOption>('newest');
+    const urlCategory = searchParams.get('category') || 'all';
+    const sortBy: ShopSortOption = 'newest';
 
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(false);
@@ -128,18 +128,10 @@ const ShopList = ({ initialShops = [], searchMode = false, title }: ShopListProp
     const debouncedSearch = useDebounce(urlSearchTerm, 300);
     const observerTarget = useRef<HTMLDivElement>(null);
     const hasInitiallyLoaded = useRef(false);
-    const { t, locale } = useLanguage();
+    const { t } = useLanguage();
 
     // Location for distance calculation
     const { latitude, longitude } = useLocation();
-
-    useEffect(() => {
-        const fetchCategories = async () => {
-            const cats = await getShopCategories();
-            setCategories(cats);
-        };
-        fetchCategories();
-    }, []);
 
     // Fetch Data Function
     const loadShops = useCallback(async (isNewSearch = false) => {
@@ -151,7 +143,7 @@ const ShopList = ({ initialShops = [], searchMode = false, title }: ShopListProp
                 limit: 20,
                 search: debouncedSearch,
                 sortBy: sortBy,
-                categoryId: selectedCategory,
+                categoryId: urlCategory, // Use URL value directly
             });
 
             let newShops = result.shops as Shop[];
@@ -175,49 +167,53 @@ const ShopList = ({ initialShops = [], searchMode = false, title }: ShopListProp
         } finally {
             setLoading(false);
         }
-    }, [page, debouncedSearch, sortBy, selectedCategory]);
+    }, [page, debouncedSearch, sortBy, urlCategory]);
 
-    // Calculate Distances and Sort logic stays same...
+    // Calculate Distances
+    useEffect(() => {
+        const calculateDistances = async () => {
+            if (latitude && longitude && shops.length > 0) {
+                const shopsToLocate = new Map();
 
-    // ... existing distance effect ...
+                shops.forEach(s => {
+                    if (!s.distance && s.latitude && s.longitude) {
+                        shopsToLocate.set(s.id, {
+                            id: s.id,
+                            latitude: s.latitude,
+                            longitude: s.longitude
+                        });
+                    }
+                });
+
+                if (shopsToLocate.size === 0) return;
+
+                const shopsArray = Array.from(shopsToLocate.values());
+                const distances = await getDrivingDistances(latitude, longitude, shopsArray);
+
+                if (Object.keys(distances).length > 0) {
+                    setShops(prev => {
+                        return prev.map(s => {
+                            if (distances[s.id]) {
+                                return { ...s, distance: distances[s.id] };
+                            }
+                            return s;
+                        });
+                    });
+                }
+            }
+        };
+
+        calculateDistances();
+    }, [latitude, longitude, shops.length]);
 
     // Filter Change Effect
     useEffect(() => {
-        // Reset and reload when category changes
-        // Only if we're past the initial hydration/load
-        // If it's the very first load and we have initialShops, we might skip if category is 'all'
-        // But for simplicity, let's treat category change as a new search always
-
         setShops([]);
         setPage(1);
         setHasMore(true);
         loadShops(true);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedCategory]);
-
-    // Search/Sort Change Effect
-    useEffect(() => {
-        // On first render with default values and no initialShops, fetch data
-        if (!hasInitiallyLoaded.current && debouncedSearch === '' && sortBy === 'newest' && selectedCategory === 'all' && initialShops.length === 0) {
-            hasInitiallyLoaded.current = true;
-            // loadShops(true) will be called by category effect above anyway because 'all' is default?
-            // Actually category effect runs on mount too because of state init? No, React 18 strict mode maybe.
-            // Let's rely on the explicit load if needed, or if category logic covers it.
-            // The category logic runs ONCE on mount with 'all'.
-            return;
-        }
-
-        // ... existing logic adaptation ...
-        // Simply trigger load if not handled by category effect (which handles category)
-        // Here we handle search/sort
-
-        // This effect might clash with category effect if both change at once?
-        // Let's simplify: merge triggers if possible, or accept re-renders.
-
-        hasInitiallyLoaded.current = true;
-        loadShops(true);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debouncedSearch, sortBy]);
+    }, [urlCategory, debouncedSearch]); // Reload when URL filters change
 
     // Effect: Infinite Scroll
     useEffect(() => {
@@ -249,56 +245,7 @@ const ShopList = ({ initialShops = [], searchMode = false, title }: ShopListProp
         <div className={searchMode ? "py-4" : ""}>
             {title && shops.length > 0 && <h2 className="text-2xl font-semibold tracking-tight mb-6">{title}</h2>}
 
-            {/* Header with Sort - Search moved to Navbar */}
-            {!searchMode && (
-                <div className="flex flex-col sm:flex-row justify-end mb-6 gap-4 items-center">
-                    {/* Sort */}
-                    <div className="relative w-full sm:w-48 order-2 sm:order-1">
-                        <select
-                            className="w-full px-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer transition-shadow"
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value as ShopSortOption)}
-                        >
-                            <option value="newest">{t('newest') || 'Newest'}</option>
-                            <option value="name_asc">{t('nameAZ') || 'Name: A-Z'}</option>
-                        </select>
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <Filter className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                    </div>
-
-                    {/* Search removed from here */}
-                </div>
-            )}
-
-            {/* Category Filter Chips */}
-            {!searchMode && (
-                <div className="flex overflow-x-auto pb-4 gap-2 scrollbar-none mb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
-                    <button
-                        type="button"
-                        onClick={() => setSelectedCategory('all')}
-                        className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-semibold transition-all border ${selectedCategory === 'all'
-                            ? 'bg-black text-white dark:bg-white dark:text-black border-transparent shadow-sm'
-                            : 'bg-secondary/50 text-secondary-foreground border-transparent hover:bg-secondary hover:text-foreground'
-                            }`}
-                    >
-                        {t('all' as any) || 'All'}
-                    </button>
-                    {categories.map((cat) => (
-                        <button
-                            key={cat.id}
-                            type="button"
-                            onClick={() => setSelectedCategory(cat.id)}
-                            className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-semibold transition-all border ${selectedCategory === cat.id
-                                ? 'bg-black text-white dark:bg-white dark:text-black border-transparent shadow-sm'
-                                : 'bg-secondary/50 text-secondary-foreground border-transparent hover:bg-secondary hover:text-foreground'
-                                }`}
-                        >
-                            {locale === 'ml' ? (cat.name_ml || cat.name) : cat.name}
-                        </button>
-                    ))}
-                </div>
-            )}
+            {/* UI Filters Removed - Handled globally via StickyCategoryBar */}
 
             {shops.length > 0 ? (
                 <>

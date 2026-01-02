@@ -107,9 +107,9 @@ const GlobalProductCard = ({ product, className = "" }: { product: Product, clas
 
     return (
         <Link href={`/product/${product.id}`} className={`group block h-full ${className}`}>
-            <div className="bg-card text-card-foreground rounded-2xl overflow-hidden border border-border/40 shadow-sm hover:shadow-2xl hover:border-primary/20 transition-all duration-300 h-full flex flex-col relative group-hover:-translate-y-1">
-                {/* Image Section */}
-                <div className="relative aspect-square w-full overflow-hidden bg-muted">
+            <div className="bg-card text-card-foreground rounded-lg overflow-hidden border border-border/30 hover:shadow-md hover:border-primary/20 transition-all duration-200 h-full flex flex-col relative">
+                {/* Image Section - More compact aspect ratio */}
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
                     {product.image_urls?.[0] ? (
                         <div className="w-full h-full relative">
                             {/* Using next/image would be better but keeping current img tag structure for minimal diff */}
@@ -117,7 +117,7 @@ const GlobalProductCard = ({ product, className = "" }: { product: Product, clas
                             <img
                                 src={product.image_urls[0]}
                                 alt={productName}
-                                className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700"
+                                className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                             />
                         </div>
                     ) : (
@@ -128,25 +128,20 @@ const GlobalProductCard = ({ product, className = "" }: { product: Product, clas
 
                     {/* Discount Badge - Only if Discount Exists */}
                     {hasDiscount && discountPercent > 0 && (
-                        <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10">
-                            <span className="bg-red-600 text-white text-[10px] sm:text-xs font-bold px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md shadow-md animate-in fade-in zoom-in duration-300">
+                        <div className="absolute top-1.5 left-1.5 z-10">
+                            <span className="bg-green-600 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">
                                 {discountPercent}% OFF
                             </span>
                         </div>
                     )}
 
-                    {/* Action Buttons Overlay */}
-                    <div className="absolute top-2 right-2 sm:top-3 sm:right-3 flex flex-col gap-2 z-20">
+                    {/* Action Buttons Overlay - Simplified */}
+                    <div className="absolute top-1.5 right-1.5 flex flex-col gap-1 z-20">
                         {/* Wishlist Button */}
-                        <button onClick={toggleWishlist} className="p-2 sm:p-2.5 rounded-full bg-black/20 backdrop-blur-md hover:bg-white transition-all duration-300 group/heart shadow-sm border border-white/10"
+                        <button onClick={toggleWishlist} className="p-1.5 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white transition-all shadow-sm"
                             title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
                         >
-                            <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-white group-hover/heart:text-red-500'}`} />
-                        </button>
-
-                        {/* Share Button */}
-                        <button onClick={handleShare} className="p-2 sm:p-2.5 rounded-full bg-black/20 backdrop-blur-md hover:bg-white transition-all duration-300 group/share shadow-sm border border-white/10" title="Share Product">
-                            {isCopied ? (<Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500" />) : (<Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white group-hover/share:text-blue-500" />)}
+                            <Heart className={`w-3.5 h-3.5 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
                         </button>
                     </div>
 
@@ -171,45 +166,34 @@ const GlobalProductCard = ({ product, className = "" }: { product: Product, clas
                 </div>
 
                 {/* Content Section */}
-                <div className="p-4 flex flex-col flex-1 bg-card">
-                    {/* Shop Name */}
-                    <div className="flex justify-between items-start mb-1 text-xs text-muted-foreground/80 font-medium tracking-wide uppercase">
-                        <span className="truncate w-full">{shopName}</span>
-                    </div>
-
-                    {/* Product Name */}
-                    <h3 className="font-semibold text-base leading-tight line-clamp-2 group-hover:text-primary transition-colors mb-3 capitalize min-h-[3rem] tracking-tight">
+                <div className="p-3 flex flex-col flex-1 bg-card">
+                    {/* Product Name - Shop name as tooltip */}
+                    <h3
+                        className="font-medium text-sm leading-tight line-clamp-2 group-hover:text-primary transition-colors mb-2 capitalize min-h-[2.5rem]"
+                        title={`From ${shopName}`}
+                    >
                         {productName}
                     </h3>
 
-                    {/* Price & Action */}
-                    <div className="mt-auto flex items-end justify-between pt-3 border-t border-border/40">
-                        <div className="flex flex-col min-w-0 flex-1 mr-2">
-                            {hasDiscount ? (
-                                <div className="flex flex-col items-start gap-1 mb-1 sm:flex-row sm:items-center sm:gap-2 sm:mb-0.5">
-                                    <span className="text-xs sm:text-sm text-muted-foreground line-through decoration-red-500/50">
-                                        {formatPrice(mrp)}
-                                    </span>
-                                    {/* Darker green for light mode visibility */}
-                                    <span className="text-[10px] font-bold text-white bg-green-600 px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">
-                                        Save {formatPrice(savedAmount)}
-                                    </span>
-                                </div>
-                            ) : (
-                                <div className="h-4 sm:h-6"></div> // Spacer to keep alignment if no discount
+                    {/* Price & Action - Clean layout */}
+                    <div className="mt-auto flex items-center justify-between gap-2">
+                        <div className="flex flex-col min-w-0">
+                            <span className="font-bold text-base sm:text-lg text-foreground">{formatPrice(product.price)}</span>
+                            {hasDiscount && (
+                                <span className="text-xs text-muted-foreground line-through">
+                                    {formatPrice(mrp)}
+                                </span>
                             )}
-                            <span className="font-bold text-lg sm:text-xl text-primary tracking-tight truncate">{formatPrice(product.price)}</span>
                         </div>
 
                         <button
                             onClick={handleAddToCart}
-                            className={`p-2 sm:p-2.5 rounded-xl transition-all duration-300 shadow-sm active:scale-95 shrink-0 ${isAdded
-                                ? 'bg-green-500 text-white shadow-green-200 dark:shadow-green-900/20'
-                                : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5'
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border ${isAdded
+                                ? 'bg-green-500 border-green-500 text-white'
+                                : 'bg-transparent border-primary text-primary hover:bg-primary hover:text-primary-foreground'
                                 }`}
-                            title={t('addToCart')}
                         >
-                            {isAdded ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />}
+                            {isAdded ? <Check className="w-4 h-4" /> : 'ADD'}
                         </button>
                     </div>
                 </div>
@@ -387,7 +371,7 @@ const GlobalProductList = ({ initialProducts = [], searchMode = false, title }: 
     const [sortBy, setSortBy] = useState<SortOption>('newest');
     // Derived from URL
     const selectedCategory = searchParams.get('category') || 'all';
-    const selectedSubCategory = searchParams.get('sub_category') || 'all';
+    const selectedSubCategory = searchParams.get('subcategory') || searchParams.get('sub_category') || 'all';
 
     // Metadata State
     const [categories, setCategories] = useState<ProductCategory[]>([]);
@@ -579,90 +563,8 @@ const GlobalProductList = ({ initialProducts = [], searchMode = false, title }: 
     return (
         <div>
             {!searchMode && (
-                <div className="flex flex-col gap-4 mb-6">
-                    <div className="flex flex-col md:flex-row justify-between gap-4 items-center">
-                        {/* Sort Container */}
-                        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-1 justify-end">
-                            <div className="relative w-full sm:w-48">
-                                <select
-                                    className="w-full pl-4 pr-10 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer transition-shadow"
-                                    value={sortBy}
-                                    onChange={(e) => setSortBy(e.target.value as SortOption)}
-                                >
-                                    <option value="newest">{t('newest') || 'Newest'}</option>
-                                    <option value="price_asc">{t('priceLowHigh') || 'Price: Low to High'}</option>
-                                    <option value="price_desc">{t('priceHighLow') || 'Price: High to Low'}</option>
-                                    <option value="name_asc">{t('nameAZ') || 'Name: A-Z'}</option>
-                                </select>
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                                    <Filter className="h-4 w-4 text-muted-foreground" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Global Categories Pills */}
-                    <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-                        <button
-                            type="button"
-                            onClick={() => updateCategory('all')}
-                            className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-semibold transition-all border ${(decodeURIComponent(selectedCategory || '').replace(/\+/g, ' ').trim().toLowerCase() === 'all' || !selectedCategory)
-                                ? 'bg-black text-white dark:bg-white dark:text-black border-transparent shadow-sm'
-                                : 'bg-secondary/50 text-secondary-foreground border-transparent hover:bg-secondary hover:text-foreground'
-                                }`}
-                        >
-                            All
-                        </button>
-
-                        {categories.map((cat) => {
-                            const isSelected = decodeURIComponent(selectedCategory || '').replace(/\+/g, ' ').trim().toLowerCase() === cat.name.toLowerCase();
-                            return (
-                                <button
-                                    key={cat.id}
-                                    type="button"
-                                    onClick={() => updateCategory(cat.name)}
-                                    className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-semibold transition-all border ${isSelected
-                                        ? 'bg-black text-white dark:bg-white dark:text-black border-transparent shadow-sm'
-                                        : 'bg-secondary/50 text-secondary-foreground border-transparent hover:bg-secondary hover:text-foreground'
-                                        }`}
-                                >
-                                    {locale === 'ml' && cat.name_ml ? cat.name_ml : cat.name}
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    {/* Sub-Categories Tabs (Only if main category selected and subs exist) */}
-                    {selectedCategory !== 'all' && subCategories.length > 0 && (
-                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 border-b border-border/40 mb-2">
-                            <button
-                                type="button"
-                                onClick={() => updateSubCategory('all')}
-                                className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${!selectedSubCategory || selectedSubCategory === 'all'
-                                    ? 'bg-black text-white dark:bg-white dark:text-black border-transparent shadow-sm'
-                                    : 'bg-background text-muted-foreground border-border hover:bg-secondary hover:text-foreground'
-                                    }`}
-                            >
-                                All {selectedCategory}
-                            </button>
-                            {subCategories.map((sub) => {
-                                const isSelected = decodeURIComponent(selectedSubCategory || '').replace(/\+/g, ' ').trim().toLowerCase() === sub.name.toLowerCase();
-                                return (
-                                    <button
-                                        key={sub.id}
-                                        type="button"
-                                        onClick={() => updateSubCategory(sub.name)}
-                                        className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${isSelected
-                                            ? 'bg-black text-white dark:bg-white dark:text-black border-transparent shadow-sm'
-                                            : 'bg-background text-muted-foreground border-border hover:bg-secondary hover:text-foreground'
-                                            }`}
-                                    >
-                                        {locale === 'ml' && sub.name_ml ? sub.name_ml : sub.name}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    )}
+                <div className="flex flex-col gap-2 mb-4">
+                    {/* Sub-categories removed - now handled by StickyCategoryBar */}
                 </div>
             )}
 

@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { useLocationFilter } from '@/context/LocationFilterContext';
+import { MapPin, ChevronDown, X, Package, Wrench, Store } from 'lucide-react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 export default function LocationFilter() {
     const {
@@ -18,12 +20,30 @@ export default function LocationFilter() {
         clearAll,
     } = useLocationFilter();
 
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
+
+    const currentTab = (searchParams.get('tab') as 'products' | 'services' | 'shops') || 'products';
     const [isExpanded, setIsExpanded] = useState(false);
-    const [showTooltip, setShowTooltip] = useState(false);
-
     const hasFilters = selectedState || selectedDistrict || selectedTown;
+    const isHomePage = pathname === '/';
 
-    // Build display text for collapsed state
+    const handleTabChange = (tab: 'products' | 'services' | 'shops') => {
+        const params = new URLSearchParams(searchParams.toString());
+
+        // Clear category filters when switching tabs
+        params.delete('category');
+        params.delete('subcategory');
+
+        if (tab === 'products') {
+            params.delete('tab');
+        } else {
+            params.set('tab', tab);
+        }
+        router.push(`/?${params.toString()}`, { scroll: false });
+    };
+
     const getFilterDisplayText = () => {
         if (selectedTown) return selectedTown;
         if (selectedDistrict) return selectedDistrict;
@@ -33,339 +53,231 @@ export default function LocationFilter() {
 
     return (
         <div className="location-filter">
-            {/* Mobile: Compact chip/button that expands */}
-            <div className="mobile-filter">
-                <button
-                    className={`filter-toggle ${hasFilters ? 'has-filter' : ''}`}
-                    onClick={() => setIsExpanded(!isExpanded)}
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="location-icon">
-                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                        <circle cx="12" cy="10" r="3" />
-                    </svg>
-                    <span className="filter-text">{getFilterDisplayText()}</span>
-                    <svg className={`chevron ${isExpanded ? 'open' : ''}`} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="m6 9 6 6 6-6" />
-                    </svg>
-                </button>
-
-                {hasFilters && (
-                    <button onClick={clearAll} className="clear-icon" title="Clear filters">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                    </button>
-                )}
-            </div>
-
-            {/* Desktop: Always show dropdowns inline */}
-            <div className="desktop-filter">
-                {/* Info Icon with Tooltip */}
-                <div className="info-container">
-                    <button
-                        className="info-button"
-                        onClick={() => setShowTooltip(!showTooltip)}
-                        onMouseEnter={() => setShowTooltip(true)}
-                        onMouseLeave={() => setShowTooltip(false)}
-                        aria-label="Location filter info"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <path d="M12 16v-4"></path>
-                            <path d="M12 8h.01"></path>
-                        </svg>
-                    </button>
-                    {showTooltip && (
-                        <div className="tooltip">
-                            <strong>Location Filter</strong>
-                            <ul>
-                                <li>Town → Results from that town only</li>
-                                <li>District only → Entire district</li>
-                                <li>State only → Entire state</li>
-                                <li>Clear → All India</li>
-                            </ul>
+            {/* Desktop: Horizontal bar with tabs + location filter */}
+            <div className="desktop-bar">
+                <div className="bar-container">
+                    {/* Products/Services/Shops Tabs */}
+                    {isHomePage && (
+                        <div className="tab-group">
+                            <button
+                                className={`tab-btn ${currentTab === 'products' ? 'active' : ''}`}
+                                onClick={() => handleTabChange('products')}
+                            >
+                                <Package className="w-4 h-4" />
+                                <span>Products</span>
+                            </button>
+                            <button
+                                className={`tab-btn ${currentTab === 'services' ? 'active' : ''}`}
+                                onClick={() => handleTabChange('services')}
+                            >
+                                <Wrench className="w-4 h-4" />
+                                <span>Services</span>
+                            </button>
+                            <button
+                                className={`tab-btn ${currentTab === 'shops' ? 'active' : ''}`}
+                                onClick={() => handleTabChange('shops')}
+                            >
+                                <Store className="w-4 h-4" />
+                                <span>Shops</span>
+                            </button>
                         </div>
                     )}
-                </div>
 
-                <select
-                    value={selectedState || ''}
-                    onChange={(e) => setSelectedState(e.target.value || null)}
-                    className="filter-select"
-                >
-                    <option value="">All States</option>
-                    {states.map((state) => (
-                        <option key={state} value={state}>{state}</option>
-                    ))}
-                </select>
+                    {/* Spacer */}
+                    <div className="flex-1" />
 
-                <select
-                    value={selectedDistrict || ''}
-                    onChange={(e) => setSelectedDistrict(e.target.value || null)}
-                    className="filter-select"
-                    disabled={!selectedState}
-                >
-                    <option value="">All Districts</option>
-                    {districts.map((district) => (
-                        <option key={district} value={district}>{district}</option>
-                    ))}
-                </select>
-
-                <select
-                    value={selectedTown || ''}
-                    onChange={(e) => setSelectedTown(e.target.value || null)}
-                    className="filter-select"
-                    disabled={!selectedDistrict || isLoadingTowns}
-                >
-                    <option value="">
-                        {isLoadingTowns ? 'Loading...' : 'All Towns'}
-                    </option>
-                    {towns.map((town) => (
-                        <option key={town} value={town}>{town}</option>
-                    ))}
-                </select>
-
-                {hasFilters && (
-                    <button onClick={clearAll} className="clear-button">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                        Clear
-                    </button>
-                )}
-            </div>
-
-            {/* Mobile: Expanded dropdown panel */}
-            {isExpanded && (
-                <div className="mobile-dropdown-panel">
-                    <div className="panel-header">
-                        <span>Filter by Location</span>
-                        <button onClick={() => setIsExpanded(false)} className="close-btn">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div className="panel-content">
-                        <div className="select-group">
-                            <label>State</label>
+                    {/* Location Filter */}
+                    <div className="filter-group">
+                        <div className="filter-row">
                             <select
                                 value={selectedState || ''}
                                 onChange={(e) => setSelectedState(e.target.value || null)}
+                                className="filter-select"
                             >
                                 <option value="">All States</option>
-                                {states.map((state) => (
-                                    <option key={state} value={state}>{state}</option>
-                                ))}
+                                {states.map((s) => <option key={s} value={s}>{s}</option>)}
                             </select>
-                        </div>
-
-                        <div className="select-group">
-                            <label>District</label>
                             <select
                                 value={selectedDistrict || ''}
                                 onChange={(e) => setSelectedDistrict(e.target.value || null)}
+                                className="filter-select"
                                 disabled={!selectedState}
                             >
                                 <option value="">All Districts</option>
-                                {districts.map((district) => (
-                                    <option key={district} value={district}>{district}</option>
-                                ))}
+                                {districts.map((d) => <option key={d} value={d}>{d}</option>)}
                             </select>
-                        </div>
-
-                        <div className="select-group">
-                            <label>Town</label>
                             <select
                                 value={selectedTown || ''}
                                 onChange={(e) => setSelectedTown(e.target.value || null)}
+                                className="filter-select"
                                 disabled={!selectedDistrict || isLoadingTowns}
                             >
-                                <option value="">
-                                    {isLoadingTowns ? 'Loading...' : 'All Towns'}
-                                </option>
-                                {towns.map((town) => (
-                                    <option key={town} value={town}>{town}</option>
-                                ))}
+                                <option value="">{isLoadingTowns ? 'Loading...' : 'All Towns'}</option>
+                                {towns.map((t) => <option key={t} value={t}>{t}</option>)}
                             </select>
+                            {hasFilters && (
+                                <button onClick={clearAll} className="clear-btn">
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            )}
                         </div>
-
-                        <p className="hint">
-                            Select location to filter products, services and shops.
-                        </p>
-                    </div>
-
-                    <div className="panel-footer">
-                        {hasFilters && (
-                            <button onClick={clearAll} className="clear-all-btn">
-                                Clear All
-                            </button>
-                        )}
-                        <button onClick={() => setIsExpanded(false)} className="apply-btn">
-                            Apply
-                        </button>
                     </div>
                 </div>
-            )}
+            </div>
 
-            {/* Backdrop for mobile panel */}
+            {/* Mobile: Compact row with tabs + location chip */}
+            <div className="mobile-bar">
+                {/* Tabs - only on home page */}
+                {isHomePage && (
+                    <div className="mobile-tabs">
+                        <button
+                            className={`m-tab ${currentTab === 'products' ? 'active' : ''}`}
+                            onClick={() => handleTabChange('products')}
+                        >
+                            <Package className="w-3.5 h-3.5" />
+                            Products
+                        </button>
+                        <button
+                            className={`m-tab ${currentTab === 'services' ? 'active' : ''}`}
+                            onClick={() => handleTabChange('services')}
+                        >
+                            <Wrench className="w-3.5 h-3.5" />
+                            Services
+                        </button>
+                        <button
+                            className={`m-tab ${currentTab === 'shops' ? 'active' : ''}`}
+                            onClick={() => handleTabChange('shops')}
+                        >
+                            <Store className="w-3.5 h-3.5" />
+                            Shops
+                        </button>
+                    </div>
+                )}
+
+                {/* Location chip */}
+                <div className="mobile-loc-row">
+                    <button
+                        className={`loc-chip ${hasFilters ? 'has-filter' : ''}`}
+                        onClick={() => setIsExpanded(!isExpanded)}
+                    >
+                        <MapPin className="w-3 h-3" />
+                        <span>{getFilterDisplayText()}</span>
+                        <ChevronDown className={`w-3 h-3 ${isExpanded ? 'rotate-180' : ''}`} />
+                    </button>
+                    {hasFilters && (
+                        <button onClick={clearAll} className="chip-clear">
+                            <X className="w-3 h-3" />
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* Mobile expanded panel */}
             {isExpanded && (
-                <div className="backdrop" onClick={() => setIsExpanded(false)} />
+                <>
+                    <div className="mobile-panel">
+                        <div className="panel-body">
+                            <div className="field">
+                                <label>State</label>
+                                <select value={selectedState || ''} onChange={(e) => setSelectedState(e.target.value || null)}>
+                                    <option value="">All States</option>
+                                    {states.map((s) => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                            </div>
+                            <div className="field">
+                                <label>District</label>
+                                <select value={selectedDistrict || ''} onChange={(e) => setSelectedDistrict(e.target.value || null)} disabled={!selectedState}>
+                                    <option value="">All Districts</option>
+                                    {districts.map((d) => <option key={d} value={d}>{d}</option>)}
+                                </select>
+                            </div>
+                            <div className="field">
+                                <label>Town</label>
+                                <select value={selectedTown || ''} onChange={(e) => setSelectedTown(e.target.value || null)} disabled={!selectedDistrict || isLoadingTowns}>
+                                    <option value="">{isLoadingTowns ? 'Loading...' : 'All Towns'}</option>
+                                    {towns.map((t) => <option key={t} value={t}>{t}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                        <div className="panel-footer">
+                            {hasFilters && <button onClick={clearAll} className="btn-clear">Clear</button>}
+                            <button onClick={() => setIsExpanded(false)} className="btn-done">Done</button>
+                        </div>
+                    </div>
+                    <div className="backdrop" onClick={() => setIsExpanded(false)} />
+                </>
             )}
 
             <style jsx>{`
-                .location-filter {
-                    position: relative;
+                .location-filter { position: relative; }
+
+                /* Desktop Bar */
+                .desktop-bar {
+                    display: none;
+                    background: hsl(var(--secondary) / 0.3);
+                    border-bottom: 1px solid hsl(var(--border) / 0.3);
                 }
 
-                /* Mobile filter toggle */
-                .mobile-filter {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    padding: 6px 12px;
-                    background: var(--bg-secondary, hsl(var(--secondary) / 0.5));
-                    border-bottom: 1px solid hsl(var(--border) / 0.4);
+                @media (min-width: 1024px) {
+                    .desktop-bar {
+                        display: block;
+                    }
+                    .mobile-bar {
+                        display: none;
+                    }
                 }
 
-                .filter-toggle {
+                .bar-container {
                     display: flex;
                     align-items: center;
-                    gap: 8px;
-                    padding: 8px 14px;
-                    border: 1px solid hsl(var(--border));
-                    border-radius: 24px;
-                    background: hsl(var(--background));
-                    color: hsl(var(--foreground));
+                    gap: 16px;
+                    max-width: 1536px;
+                    margin: 0 auto;
+                    padding: 8px 16px;
+                }
+
+                .tab-group {
+                    display: flex;
+                    gap: 4px;
+                    padding: 3px;
+                    background: hsl(var(--muted));
+                    border-radius: 8px;
+                }
+
+                .tab-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 8px 16px;
                     font-size: 13px;
                     font-weight: 500;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-                }
-
-                .filter-toggle:hover {
-                    border-color: hsl(var(--primary));
-                    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-                }
-
-                .filter-toggle.has-filter {
-                    background: hsl(var(--primary) / 0.1);
-                    border-color: hsl(var(--primary) / 0.3);
-                    color: hsl(var(--primary));
-                }
-
-                .filter-toggle.has-filter .location-icon {
-                    color: hsl(var(--primary));
-                }
-
-                .location-icon {
-                    color: hsl(var(--muted-foreground));
-                    flex-shrink: 0;
-                }
-
-                .filter-text {
-                    max-width: 140px;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
-
-                .chevron {
-                    transition: transform 0.2s;
-                    opacity: 0.6;
-                    flex-shrink: 0;
-                }
-
-                .chevron.open {
-                    transform: rotate(180deg);
-                }
-
-                .clear-icon {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    width: 28px;
-                    height: 28px;
-                    min-width: 28px;
-                    min-height: 28px;
-                    border: 1px solid hsl(var(--border));
-                    border-radius: 50%;
-                    background: hsl(var(--background));
-                    color: hsl(var(--muted-foreground));
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    padding: 0;
-                }
-
-                .clear-icon:hover {
-                    background: hsl(var(--destructive) / 0.1);
-                    border-color: hsl(var(--destructive) / 0.3);
-                    color: hsl(var(--destructive));
-                }
-
-                /* Desktop filter row */
-                .desktop-filter {
-                    display: none;
-                    align-items: center;
-                    gap: 8px;
-                    padding: 8px 16px;
-                    background: hsl(var(--secondary) / 0.3);
-                    border-bottom: 1px solid hsl(var(--border) / 0.4);
-                }
-
-                .info-container {
-                    position: relative;
-                }
-
-                .info-button {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    width: 28px;
-                    height: 28px;
                     border: none;
                     background: transparent;
                     color: hsl(var(--muted-foreground));
+                    border-radius: 6px;
                     cursor: pointer;
-                    border-radius: 50%;
+                    transition: all 0.2s;
                 }
 
-                .info-button:hover {
-                    background: hsl(var(--accent));
+                .tab-btn:hover {
+                    color: hsl(var(--foreground));
                 }
 
-                .tooltip {
-                    position: absolute;
-                    top: 100%;
-                    left: 0;
-                    z-index: 1000;
-                    min-width: 240px;
-                    padding: 10px;
-                    background: hsl(var(--popover));
-                    color: hsl(var(--popover-foreground));
-                    border: 1px solid hsl(var(--border));
-                    border-radius: 8px;
-                    font-size: 12px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                .tab-btn.active {
+                    background: hsl(var(--background));
+                    color: hsl(var(--foreground));
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
                 }
 
-                .tooltip strong {
-                    display: block;
-                    margin-bottom: 6px;
+                .filter-group {
+                    display: flex;
+                    align-items: center;
                 }
 
-                .tooltip ul {
-                    margin: 0;
-                    padding-left: 14px;
-                }
-
-                .tooltip li {
-                    margin: 2px 0;
+                .filter-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
                 }
 
                 .filter-select {
@@ -374,9 +286,8 @@ export default function LocationFilter() {
                     border-radius: 6px;
                     background: hsl(var(--background));
                     color: hsl(var(--foreground));
-                    font-size: 13px;
-                    min-width: 110px;
-                    cursor: pointer;
+                    font-size: 12px;
+                    min-width: 120px;
                 }
 
                 .filter-select:disabled {
@@ -384,30 +295,121 @@ export default function LocationFilter() {
                     cursor: not-allowed;
                 }
 
-                .filter-select:focus {
-                    outline: none;
-                    border-color: hsl(var(--primary));
-                }
-
-                .clear-button {
+                .clear-btn {
                     display: flex;
                     align-items: center;
-                    gap: 4px;
-                    padding: 6px 10px;
-                    border: none;
+                    justify-content: center;
+                    width: 28px;
+                    height: 28px;
+                    border: 1px solid hsl(var(--border));
+                    border-radius: 6px;
+                    background: hsl(var(--background));
+                    color: hsl(var(--muted-foreground));
+                    cursor: pointer;
+                    transition: all 0.15s;
+                }
+
+                .clear-btn:hover {
                     background: hsl(var(--destructive) / 0.1);
                     color: hsl(var(--destructive));
+                    border-color: hsl(var(--destructive) / 0.3);
+                }
+
+                /* Mobile Bar */
+                .mobile-bar {
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 4px;
+                    padding: 2px 8px;
+                    background: hsl(var(--secondary) / 0.3);
+                    border-bottom: 1px solid hsl(var(--border) / 0.3);
+                    overflow-x: auto;
+                    scrollbar-width: none;
+                    -ms-overflow-style: none;
+                }
+                
+                .mobile-bar::-webkit-scrollbar {
+                    display: none;
+                }
+
+                .mobile-tabs {
+                    display: flex;
+                    gap: 3px;
+                    padding: 2px;
+                    background: hsl(var(--muted));
                     border-radius: 6px;
-                    font-size: 13px;
+                    flex-shrink: 0;
+                }
+
+                .m-tab {
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 2px;
+                    padding: 0px 8px;
+                    font-size: 9px;
+                    font-weight: 500;
+                    border: none;
+                    background: transparent;
+                    color: hsl(var(--muted-foreground));
+                    border-radius: 5px;
                     cursor: pointer;
                 }
 
-                .clear-button:hover {
-                    background: hsl(var(--destructive) / 0.2);
+                .m-tab.active {
+                    background: hsl(var(--background));
+                    color: hsl(var(--foreground));
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
                 }
 
-                /* Mobile dropdown panel */
-                .mobile-dropdown-panel {
+                .mobile-loc-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                    flex-shrink: 0;
+                    margin-left: auto;
+                }
+
+                .loc-chip {
+                    display: flex;
+                    align-items: center;
+                    gap: 3px;
+                    padding: 0px 8px;
+                    border: 1px solid hsl(var(--border));
+                    border-radius: 12px;
+                    background: hsl(var(--background));
+                    color: hsl(var(--foreground));
+                    font-size: 9px;
+                    font-weight: 500;
+                    line-height: 1;
+                    cursor: pointer;
+                }
+
+                .loc-chip.has-filter {
+                    background: hsl(var(--primary) / 0.1);
+                    border-color: hsl(var(--primary) / 0.3);
+                    color: hsl(var(--primary));
+                }
+
+                .chip-clear {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 16px;
+                    height: 16px;
+                    min-width: 16px;
+                    min-height: 16px;
+                    flex-shrink: 0;
+                    border: 1px solid hsl(var(--border));
+                    border-radius: 50%;
+                    background: hsl(var(--background));
+                    color: hsl(var(--muted-foreground));
+                    cursor: pointer;
+                }
+
+                .mobile-panel {
                     position: absolute;
                     top: 100%;
                     left: 0;
@@ -417,105 +419,59 @@ export default function LocationFilter() {
                     border: 1px solid hsl(var(--border));
                     border-radius: 0 0 12px 12px;
                     box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-                    animation: slideDown 0.2s ease;
                 }
 
-                @keyframes slideDown {
-                    from {
-                        opacity: 0;
-                        transform: translateY(-10px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-
-                .panel-header {
+                .panel-body {
+                    padding: 10px;
                     display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    padding: 12px 16px;
-                    border-bottom: 1px solid hsl(var(--border) / 0.5);
-                    font-weight: 600;
-                    font-size: 14px;
+                    flex-direction: column;
+                    gap: 8px;
                 }
 
-                .close-btn {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    width: 28px;
-                    height: 28px;
-                    border: none;
-                    background: transparent;
-                    color: hsl(var(--muted-foreground));
-                    cursor: pointer;
-                    border-radius: 50%;
-                }
-
-                .panel-content {
-                    padding: 12px 16px;
-                }
-
-                .select-group {
-                    margin-bottom: 12px;
-                }
-
-                .select-group label {
+                .field label {
                     display: block;
-                    font-size: 12px;
+                    font-size: 10px;
                     font-weight: 500;
                     color: hsl(var(--muted-foreground));
-                    margin-bottom: 4px;
+                    margin-bottom: 3px;
                 }
 
-                .select-group select {
+                .field select {
                     width: 100%;
-                    padding: 10px 12px;
+                    padding: 7px;
                     border: 1px solid hsl(var(--border));
-                    border-radius: 8px;
+                    border-radius: 5px;
                     background: hsl(var(--background));
                     color: hsl(var(--foreground));
-                    font-size: 14px;
-                }
-
-                .select-group select:disabled {
-                    opacity: 0.5;
-                }
-
-                .hint {
-                    font-size: 11px;
-                    color: hsl(var(--muted-foreground));
-                    margin: 8px 0 0;
+                    font-size: 12px;
                 }
 
                 .panel-footer {
                     display: flex;
-                    gap: 8px;
-                    padding: 12px 16px;
+                    gap: 6px;
+                    padding: 8px 10px;
                     border-top: 1px solid hsl(var(--border) / 0.5);
                 }
 
-                .clear-all-btn {
+                .btn-clear {
                     flex: 1;
-                    padding: 10px;
+                    padding: 7px;
                     border: 1px solid hsl(var(--border));
-                    border-radius: 8px;
+                    border-radius: 5px;
                     background: transparent;
                     color: hsl(var(--foreground));
-                    font-size: 14px;
+                    font-size: 11px;
                     cursor: pointer;
                 }
 
-                .apply-btn {
+                .btn-done {
                     flex: 2;
-                    padding: 10px;
+                    padding: 7px;
                     border: none;
-                    border-radius: 8px;
+                    border-radius: 5px;
                     background: hsl(var(--primary));
                     color: hsl(var(--primary-foreground));
-                    font-size: 14px;
+                    font-size: 11px;
                     font-weight: 500;
                     cursor: pointer;
                 }
@@ -527,22 +483,32 @@ export default function LocationFilter() {
                     right: 0;
                     bottom: 0;
                     z-index: 99;
-                    background: rgba(0,0,0,0.3);
+                    background: rgba(0,0,0,0.2);
                 }
 
-                /* Desktop: show inline dropdowns, hide mobile toggle */
-                @media (min-width: 768px) {
-                    .mobile-filter {
-                        display: none;
+                /* Desktop overrides - MUST be at the end */
+                @media (min-width: 640px) {
+                    .mobile-bar {
+                        padding: 6px 14px;
+                        gap: 6px;
                     }
-
-                    .desktop-filter {
-                        display: flex;
+                    .m-tab {
+                        padding: 5px 6px;
+                        font-size: 11px;
                     }
+                    .loc-chip {
+                        padding: 4px 10px;
+                        font-size: 11px;
+                    }
+                }
 
-                    .mobile-dropdown-panel,
+                @media (min-width: 1024px) {
+                    .mobile-bar,
+                    .mobile-tabs,
+                    .mobile-loc-row,
+                    .mobile-panel,
                     .backdrop {
-                        display: none;
+                        display: none !important;
                     }
                 }
             `}</style>

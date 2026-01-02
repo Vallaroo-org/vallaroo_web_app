@@ -16,9 +16,15 @@ export interface ServiceCategory {
 
 export async function getServiceCategories() {
     try {
+        // Use !inner join to only get categories that have at least one active service from a visible shop
         const { data, error } = await supabase
             .from('service_categories')
-            .select('id, name, name_ml, description, image_url')
+            .select('id, name, name_ml, description, image_url, services!inner(id, shops!inner(id))')
+            .eq('services.is_active', true)
+            .eq('services.hidden_by_admin', false)
+            .eq('services.shops.is_hidden', false)
+            .eq('services.shops.hidden_by_admin', false)
+            .eq('services.shops.is_verified', true)
             .order('name');
 
         if (error) {
@@ -26,7 +32,11 @@ export async function getServiceCategories() {
             return [];
         }
 
-        return data as ServiceCategory[];
+        // Deduplicate and clean up
+        const categories = data.map(({ services, ...rest }) => rest);
+        const uniqueCategories = Array.from(new Map(categories.map(item => [item.id, item])).values());
+
+        return uniqueCategories as ServiceCategory[];
     } catch (error) {
         console.error('Unexpected error fetching service categories:', error);
         return [];
