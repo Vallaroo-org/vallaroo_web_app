@@ -188,7 +188,7 @@ const DiscoverContent = () => {
 
               <div className="flex items-center gap-4">
                 <div className="flex-1 h-px bg-border"></div>
-                <span className="text-sm text-muted-foreground">or</span>
+                <span className="text-sm text-muted-foreground">{t('or')}</span>
                 <div className="flex-1 h-px bg-border"></div>
               </div>
 
@@ -199,7 +199,7 @@ const DiscoverContent = () => {
                 className="w-full py-3 rounded-xl border border-primary text-primary font-semibold hover:bg-primary/10 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Navigation className="w-4 h-4" />
-                {isLocationLoading ? 'Locating...' : permissionStatus === 'denied' ? 'Location Denied' : t('useCurrentLocation')}
+                {isLocationLoading ? t('locating') : permissionStatus === 'denied' ? t('locationDenied') : t('useCurrentLocation')}
               </button>
             </div>
           </div>

@@ -225,4 +225,21 @@ export const en = {
   friday: "Friday",
   saturday: "Saturday",
   sunday: "Sunday",
+
+  // Added missing keys
+  theme: "Theme",
+  language: "Language",
+  all: "All",
+  allStates: "All States",
+  allDistricts: "All Districts",
+  allTowns: "All Towns",
+  allIndia: "All India",
+
+  // Page Localization
+  viewAll: "View All",
+  locating: "Locating...",
+  locationDenied: "Location Denied",
+  viewOnMaps: "View on Google Maps",
+  fromShop: "From {shop}",
+  shareMsg: "Check out {name} on Vallaroo!",
 };

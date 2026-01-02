@@ -2,10 +2,12 @@
 
 import React, { useState } from 'react';
 import { useLocationFilter } from '@/context/LocationFilterContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { MapPin, ChevronDown, X, Package, Wrench, Store } from 'lucide-react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 export default function LocationFilter() {
+    const { t } = useLanguage();
     const {
         selectedState,
         selectedDistrict,
@@ -48,7 +50,7 @@ export default function LocationFilter() {
         if (selectedTown) return selectedTown;
         if (selectedDistrict) return selectedDistrict;
         if (selectedState) return selectedState;
-        return 'All India';
+        return t('allIndia');
     };
 
     return (
@@ -64,21 +66,21 @@ export default function LocationFilter() {
                                 onClick={() => handleTabChange('products')}
                             >
                                 <Package className="w-4 h-4" />
-                                <span>Products</span>
+                                <span>{t('products')}</span>
                             </button>
                             <button
                                 className={`tab-btn ${currentTab === 'services' ? 'active' : ''}`}
                                 onClick={() => handleTabChange('services')}
                             >
                                 <Wrench className="w-4 h-4" />
-                                <span>Services</span>
+                                <span>{t('services')}</span>
                             </button>
                             <button
                                 className={`tab-btn ${currentTab === 'shops' ? 'active' : ''}`}
                                 onClick={() => handleTabChange('shops')}
                             >
                                 <Store className="w-4 h-4" />
-                                <span>Shops</span>
+                                <span>{t('shops')}</span>
                             </button>
                         </div>
                     )}
@@ -94,7 +96,7 @@ export default function LocationFilter() {
                                 onChange={(e) => setSelectedState(e.target.value || null)}
                                 className="filter-select"
                             >
-                                <option value="">All States</option>
+                                <option value="">{t('allStates')}</option>
                                 {states.map((s) => <option key={s} value={s}>{s}</option>)}
                             </select>
                             <select
@@ -103,7 +105,7 @@ export default function LocationFilter() {
                                 className="filter-select"
                                 disabled={!selectedState}
                             >
-                                <option value="">All Districts</option>
+                                <option value="">{t('allDistricts')}</option>
                                 {districts.map((d) => <option key={d} value={d}>{d}</option>)}
                             </select>
                             <select
@@ -112,7 +114,7 @@ export default function LocationFilter() {
                                 className="filter-select"
                                 disabled={!selectedDistrict || isLoadingTowns}
                             >
-                                <option value="">{isLoadingTowns ? 'Loading...' : 'All Towns'}</option>
+                                <option value="">{isLoadingTowns ? 'Loading...' : t('allTowns')}</option>
                                 {towns.map((t) => <option key={t} value={t}>{t}</option>)}
                             </select>
                             {hasFilters && (
@@ -135,21 +137,21 @@ export default function LocationFilter() {
                             onClick={() => handleTabChange('products')}
                         >
                             <Package className="w-3.5 h-3.5" />
-                            Products
+                            {t('products')}
                         </button>
                         <button
                             className={`m-tab ${currentTab === 'services' ? 'active' : ''}`}
                             onClick={() => handleTabChange('services')}
                         >
                             <Wrench className="w-3.5 h-3.5" />
-                            Services
+                            {t('services')}
                         </button>
                         <button
                             className={`m-tab ${currentTab === 'shops' ? 'active' : ''}`}
                             onClick={() => handleTabChange('shops')}
                         >
                             <Store className="w-3.5 h-3.5" />
-                            Shops
+                            {t('shops')}
                         </button>
                     </div>
                 )}
@@ -349,7 +351,7 @@ export default function LocationFilter() {
                     justify-content: center;
                     gap: 2px;
                     padding: 0px 8px;
-                    font-size: 9px;
+                    font-size: 11px;
                     font-weight: 500;
                     border: none;
                     background: transparent;

@@ -225,4 +225,21 @@ export const ml = {
     friday: "വെള്ളി",
     saturday: "ശനി",
     sunday: "ഞായർ",
+
+    // Added missing keys
+    theme: "തീം",
+    language: "ഭാഷ",
+    all: "എല്ലാം",
+    allStates: "എല്ലാ സംസ്ഥാനങ്ങളും",
+    allDistricts: "എല്ലാ ജില്ലകളും",
+    allTowns: "എല്ലാ നഗരങ്ങളും",
+    allIndia: "ഇന്ത്യ ഒട്ടാകെ",
+
+    // Page Localization
+    viewAll: "എല്ലാം കാണുക",
+    locating: "ലൊക്കേഷൻ എടുക്കുന്നു...",
+    locationDenied: "ലൊക്കേഷൻ നിരസിച്ചു",
+    viewOnMaps: "ഗൂഗിൾ മാപ്പിൽ കാണുക",
+    fromShop: "{shop}-ൽ നിന്ന്",
+    shareMsg: "വല്ലാറൂവിൽ {name} പരിശോധിക്കൂ!",
 };

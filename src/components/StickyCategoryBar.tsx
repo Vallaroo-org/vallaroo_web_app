@@ -34,7 +34,7 @@ const StickyCategoryBar = ({ onCategoryClick }: StickyCategoryBarProps) => {
     const [canScrollRight, setCanScrollRight] = useState(false);
     const [subCanScrollLeft, setSubCanScrollLeft] = useState(false);
     const [subCanScrollRight, setSubCanScrollRight] = useState(false);
-    const { locale } = useLanguage();
+    const { locale, t } = useLanguage();
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
@@ -277,7 +277,7 @@ const StickyCategoryBar = ({ onCategoryClick }: StickyCategoryBarProps) => {
                                 className={`sub-pill ${!activeSubcategoryName ? 'active' : ''}`}
                                 onClick={() => handleClick(activeCategoryName)}
                             >
-                                All
+                                {t('all')}
                             </button>
                             {subcategories[activeCategoryName].map((sub) => (
                                 <button

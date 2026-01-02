@@ -212,6 +212,7 @@ const NavbarContent = () => {
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<any>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const toggleButtonRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -276,7 +277,11 @@ const NavbarContent = () => {
   // Close menu on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node) &&
+        !toggleButtonRef.current?.contains(event.target as Node)
+      ) {
         setIsMenuOpen(false);
       }
     };
@@ -363,6 +368,7 @@ const NavbarContent = () => {
             <WishlistIcon />
             <CartIcon />
             <button
+              ref={toggleButtonRef}
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 -mr-2 rounded-md hover:bg-accent transition-colors"
               aria-label="Toggle Menu"
@@ -409,12 +415,12 @@ const NavbarContent = () => {
             <div className="h-px bg-border/50 my-2" />
 
             <div className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors">
-              <span className="font-medium text-sm">Theme</span>
+              <span className="font-medium text-sm">{t('theme')}</span>
               <ThemeToggle />
             </div>
 
             <div className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors">
-              <span className="font-medium text-sm">Language</span>
+              <span className="font-medium text-sm">{t('language')}</span>
               <LanguageSwitcher />
             </div>
           </div>

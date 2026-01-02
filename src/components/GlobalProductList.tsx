@@ -86,7 +86,8 @@ const GlobalProductCard = ({ product, className = "" }: { product: Product, clas
         if (navigator.share) {
             navigator.share({
                 title: productName,
-                text: `Check out ${productName} on Vallaroo!`,
+                title: productName,
+                text: t('shareMsg')?.replace('{name}', productName) || `Check out ${productName} on Vallaroo!`,
                 url: url,
             }).catch(console.error);
         } else {
@@ -157,7 +158,7 @@ const GlobalProductCard = ({ product, className = "" }: { product: Product, clas
                                 }
                             }}
                             className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md text-white text-[10px] sm:text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 font-medium z-10 border border-white/10 cursor-pointer hover:bg-black/80 transition-colors"
-                            title="View on Google Maps"
+                            title={t('viewOnMaps')}
                         >
                             <MapPin className="w-3 h-3 text-primary" />
                             <span>{product.distance} km</span>
@@ -170,7 +171,7 @@ const GlobalProductCard = ({ product, className = "" }: { product: Product, clas
                     {/* Product Name - Shop name as tooltip */}
                     <h3
                         className="font-medium text-sm leading-tight line-clamp-2 group-hover:text-primary transition-colors mb-2 capitalize min-h-[2.5rem]"
-                        title={`From ${shopName}`}
+                        title={t('fromShop')?.replace('{shop}', shopName) || `From ${shopName}`}
                     >
                         {productName}
                     </h3>
@@ -193,7 +194,7 @@ const GlobalProductCard = ({ product, className = "" }: { product: Product, clas
                                 : 'bg-transparent border-primary text-primary hover:bg-primary hover:text-primary-foreground'
                                 }`}
                         >
-                            {isAdded ? <Check className="w-4 h-4" /> : 'ADD'}
+                            {isAdded ? <Check className="w-4 h-4" /> : t('add')}
                         </button>
                     </div>
                 </div>
@@ -212,6 +213,7 @@ const CategorySection = ({
     onViewAll: (category: string) => void;
     index: number;
 }) => {
+    const { t } = useLanguage();
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     // Initially true for first 2 sections (above fold), false for others
@@ -323,7 +325,7 @@ const CategorySection = ({
                     onClick={() => onViewAll(category)}
                     className="flex items-center gap-1 text-sm font-semibold text-primary hover:bg-primary/10 px-3 py-1.5 rounded-lg transition-colors"
                 >
-                    View All <ChevronRight className="w-4 h-4" />
+                    {t('viewAll')} <ChevronRight className="w-4 h-4" />
                 </button>
             </div>
 
@@ -579,7 +581,7 @@ const GlobalProductList = ({ initialProducts = [], searchMode = false, title }: 
                             {categories.map((cat, index) => (
                                 <CategorySection
                                     key={cat.id}
-                                    category={cat.name}
+                                    category={locale === 'ml' && cat.name_ml ? cat.name_ml : cat.name}
                                     onViewAll={handleViewAll}
                                     index={index}
                                 />
